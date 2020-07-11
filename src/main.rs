@@ -17,7 +17,7 @@ fn main() -> Result<()> {
     let event_settings = EventSettings::new();
     let mut events = Events::new(event_settings);
 
-    while let Some(_) = events.next(&mut window) {}
+    while events.next(&mut window).is_some() {}
 
     Ok(())
 }
