@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use glutin_window::GlutinWindow;
 use graphics::color::{BLACK, WHITE};
-use lockwars::{Game, GameView, GameViewSettings};
+use lockwars::{Game, GameSettings, GameView, GameViewSettings};
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{EventSettings, Events, RenderEvent, WindowSettings};
 
@@ -22,14 +22,20 @@ fn main() -> Result<()> {
 
     let mut gl = GlGraphics::new(opengl);
 
+    let game_settings = GameSettings {
+        n_columns: 6,
+        n_rows: 7,
+    };
+    let game = Game::new(game_settings).context("cannot create game")?;
+
     let game_view_settings = GameViewSettings {
         background_color: BLACK,
         game_area_percentage: 0.8,
-        game_area_border_thickness: 1.0,
+        game_area_border_thickness: 2.0,
         game_area_border_color: WHITE,
+        division_line_thickness: 1.0,
+        division_line_color: WHITE,
     };
-
-    let game = Game::new();
     let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
 
     let event_settings = EventSettings::new();
@@ -38,8 +44,8 @@ fn main() -> Result<()> {
     while let Some(event) = events.next(&mut window) {
         if let Some(args) = event.render_args() {
             gl.draw(args.viewport(), |context, g| {
-                game_view.draw(&game, &context, g);
-            });
+                game_view.draw(&game, &context, g)
+            })?;
         }
     }
 
