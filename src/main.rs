@@ -35,6 +35,8 @@ fn main() -> Result<()> {
         game_area_border_color: WHITE,
         division_line_thickness: 1.0,
         division_line_color: WHITE,
+        cell_separator_thickness: 0.5,
+        cell_separator_color: [1.0, 1.0, 1.0, 0.5],
     };
     let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
 
