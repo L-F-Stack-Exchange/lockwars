@@ -5,3 +5,6 @@ authors = ["L. F. <l.f.stack.exchange@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+piston = "0.50.0"
+pistoncore-glutin_window = "0.64.0"
+anyhow = "1.0.31"
