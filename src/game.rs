@@ -20,7 +20,7 @@ impl Game {
             Err(anyhow!("game must contain at least one column"))
         } else if settings.n_rows == 0 {
             Err(anyhow!("game must contain at least one row"))
-        } else if !(settings.base_span.start < settings.base_span.end) {
+        } else if settings.base_span.start >= settings.base_span.end {
             Err(anyhow!("base must span at least one row"))
         } else if settings.base_span.end > settings.n_rows {
             Err(anyhow!("base must not exceed game area"))

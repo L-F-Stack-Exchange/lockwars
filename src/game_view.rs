@@ -2,11 +2,12 @@
 
 use crate::Game;
 use anyhow::{anyhow, Context as AnyhowContext, Result};
+use graphics::line;
+use graphics::rectangle;
 use graphics::types::Color;
 use graphics::{Context, Graphics};
 
 /// The game view.
-#[derive(Debug)]
 pub struct GameView {
     settings: GameViewSettings,
 }
@@ -24,7 +25,7 @@ impl GameView {
     where
         G: Graphics,
     {
-        use graphics::rectangle::{self, Rectangle};
+        use graphics::color::TRANSPARENT;
         use std::convert::TryFrom;
 
         let settings = &self.settings;
@@ -68,18 +69,14 @@ impl GameView {
         let game_area_top_y = center_y - game_area_height * 0.5;
         let game_area_bottom_y = center_y + game_area_height * 0.5;
 
-        let border = Rectangle::new_border(
-            settings.game_area_border_color,
-            settings.game_area_border_thickness,
-        );
+        let border = rectangle::Rectangle::new(TRANSPARENT).border(settings.game_area_border);
         border.draw(game_area, &context.draw_state, context.transform, g);
 
         // draw the division line
-        graphics::line_from_to(
-            settings.division_line_color,
-            settings.division_line_thickness,
+        settings.division_line.draw_from_to(
             [center_x, game_area_top_y],
             [center_x, game_area_bottom_y],
+            &context.draw_state,
             context.transform,
             g,
         );
@@ -91,11 +88,10 @@ impl GameView {
                 .into();
             let x = center_x + (pos - n_columns_f64) * cell_size;
 
-            graphics::line_from_to(
-                settings.cell_separator_color,
-                settings.cell_separator_thickness,
+            settings.cell_separator.draw_from_to(
                 [x, game_area_top_y],
                 [x, game_area_bottom_y],
+                &context.draw_state,
                 context.transform,
                 g,
             );
@@ -108,22 +104,17 @@ impl GameView {
                 .into();
             let y = game_area_top_y + pos * cell_size;
 
-            graphics::line_from_to(
-                settings.cell_separator_color,
-                settings.cell_separator_thickness,
+            settings.cell_separator.draw_from_to(
                 [game_area_left_x, y],
                 [game_area_right_x, y],
+                &context.draw_state,
                 context.transform,
                 g,
             );
         }
 
         // draw base border
-        #[rustfmt::skip]
-        let border = Rectangle::new_border(
-            settings.base_border_color,
-            settings.base_border_thickness,
-        );
+        let border = rectangle::Rectangle::new(TRANSPARENT).border(settings.base_border);
 
         let base_start: f64 = u32::try_from(game.settings().base_span.start)
             .context(anyhow!("cannot draw base border"))?
@@ -152,7 +143,7 @@ impl GameView {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 /// The game view settings.
 pub struct GameViewSettings {
     /// The background color of the screen.
@@ -169,33 +160,19 @@ pub struct GameViewSettings {
     /// to preserve the proportion of cells.
     pub game_area_percentage: f64,
 
-    /// The thickness of the border of the game area.
-    pub game_area_border_thickness: f64,
+    /// The border of the game area.
+    pub game_area_border: rectangle::Border,
 
-    /// The color of the border of the game area.
-    pub game_area_border_color: Color,
-
-    /// The thickness of the [division line].
+    /// The [division line].
     ///
     /// [division line]: ../game/index.html#division-line
-    pub division_line_thickness: f64,
+    pub division_line: line::Line,
 
-    /// The color of the [division line].
-    ///
-    /// [division line]: ../game/index.html#division-line
-    pub division_line_color: Color,
+    /// The cell separators.
+    pub cell_separator: line::Line,
 
-    /// The thickness of the cell separators.
-    pub cell_separator_thickness: f64,
-
-    /// The color of the cell separators.
-    pub cell_separator_color: Color,
-
-    /// The thickness of the base border.
-    pub base_border_thickness: f64,
-
-    /// The color of the base border.
-    pub base_border_color: Color,
+    /// The border of the bases.
+    pub base_border: rectangle::Border,
 }
 
 /// Checks that the argument is within the range [0.0, 1.0].
