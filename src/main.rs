@@ -25,6 +25,7 @@ fn main() -> Result<()> {
     let game_settings = GameSettings {
         n_columns: 6,
         n_rows: 7,
+        base_span: 2..5,
     };
     let game = Game::new(game_settings).context("cannot create game")?;
 
@@ -37,6 +38,8 @@ fn main() -> Result<()> {
         division_line_color: WHITE,
         cell_separator_thickness: 0.5,
         cell_separator_color: [1.0, 1.0, 1.0, 0.5],
+        base_border_thickness: 1.0,
+        base_border_color: WHITE,
     };
     let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
 

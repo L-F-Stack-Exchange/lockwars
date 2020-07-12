@@ -5,6 +5,7 @@
 //! The division line separates the two players' territories.
 
 use anyhow::{anyhow, Result};
+use std::ops::Range;
 
 /// The game state.
 #[derive(Debug)]
@@ -19,6 +20,10 @@ impl Game {
             Err(anyhow!("game must contain at least one column"))
         } else if settings.n_rows == 0 {
             Err(anyhow!("game must contain at least one row"))
+        } else if !(settings.base_span.start < settings.base_span.end) {
+            Err(anyhow!("base must span at least one row"))
+        } else if settings.base_span.end > settings.n_rows {
+            Err(anyhow!("base must not exceed game area"))
         } else {
             Ok(Self { settings })
         }
@@ -40,4 +45,7 @@ pub struct GameSettings {
 
     /// The number of rows in the game.
     pub n_rows: usize,
+
+    /// The rows that the bases span.
+    pub base_span: Range<usize>,
 }

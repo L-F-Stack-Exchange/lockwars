@@ -118,6 +118,36 @@ impl GameView {
             );
         }
 
+        // draw base border
+        #[rustfmt::skip]
+        let border = Rectangle::new_border(
+            settings.base_border_color,
+            settings.base_border_thickness,
+        );
+
+        let base_start: f64 = u32::try_from(game.settings().base_span.start)
+            .context(anyhow!("cannot draw base border"))?
+            .into();
+        let base_end: f64 = u32::try_from(game.settings().base_span.end)
+            .context(anyhow!("cannot draw base border"))?
+            .into();
+
+        let left_base = rectangle::rectangle_by_corners(
+            game_area_left_x,
+            game_area_top_y + cell_size * base_start,
+            game_area_left_x + cell_size,
+            game_area_top_y + cell_size * base_end,
+        );
+        border.draw(left_base, &context.draw_state, context.transform, g);
+
+        let right_base = rectangle::rectangle_by_corners(
+            game_area_right_x - cell_size,
+            game_area_top_y + cell_size * base_start,
+            game_area_right_x,
+            game_area_top_y + cell_size * base_end,
+        );
+        border.draw(right_base, &context.draw_state, context.transform, g);
+
         Ok(())
     }
 }
@@ -160,6 +190,12 @@ pub struct GameViewSettings {
 
     /// The color of the cell separators.
     pub cell_separator_color: Color,
+
+    /// The thickness of the base border.
+    pub base_border_thickness: f64,
+
+    /// The color of the base border.
+    pub base_border_color: Color,
 }
 
 /// Checks that the argument is within the range [0.0, 1.0].
