@@ -28,10 +28,13 @@ impl GameView {
         use graphics::color::TRANSPARENT;
         use std::convert::TryFrom;
 
+        // calculate layout
         let settings = &self.settings;
         let [view_width, view_height] = context.get_view_size();
 
-        // calculate layout
+        let center_x = view_width * 0.5;
+        let center_y = view_height * 0.5;
+
         let n_columns = game.settings().n_columns;
         let n_rows = game.settings().n_rows;
         let n_total_columns = n_columns * 2;
@@ -51,13 +54,6 @@ impl GameView {
         let game_area_width = cell_size * n_total_columns_f64;
         let game_area_height = cell_size * n_rows_f64;
 
-        let center_x = view_width * 0.5;
-        let center_y = view_height * 0.5;
-
-        // draw background
-        graphics::clear(settings.background_color, g);
-
-        // draw the border of the game area
         let game_area = rectangle::centered([
             center_x,
             center_y,
@@ -69,17 +65,8 @@ impl GameView {
         let game_area_top_y = center_y - game_area_height * 0.5;
         let game_area_bottom_y = center_y + game_area_height * 0.5;
 
-        let border = rectangle::Rectangle::new(TRANSPARENT).border(settings.game_area_border);
-        border.draw(game_area, &context.draw_state, context.transform, g);
-
-        // draw the division line
-        settings.division_line.draw_from_to(
-            [center_x, game_area_top_y],
-            [center_x, game_area_bottom_y],
-            &context.draw_state,
-            context.transform,
-            g,
-        );
+        // draw background
+        graphics::clear(settings.background_color, g);
 
         // draw vertical cell separators
         for pos in (1..n_columns).chain((n_columns + 1)..n_total_columns) {
@@ -113,6 +100,15 @@ impl GameView {
             );
         }
 
+        // draw the division line
+        settings.division_line.draw_from_to(
+            [center_x, game_area_top_y],
+            [center_x, game_area_bottom_y],
+            &context.draw_state,
+            context.transform,
+            g,
+        );
+
         // draw base border
         let border = rectangle::Rectangle::new(TRANSPARENT).border(settings.base_border);
 
@@ -138,6 +134,10 @@ impl GameView {
             game_area_top_y + cell_size * base_end,
         );
         border.draw(right_base, &context.draw_state, context.transform, g);
+
+        // draw the border of the game area
+        let border = rectangle::Rectangle::new(TRANSPARENT).border(settings.game_area_border);
+        border.draw(game_area, &context.draw_state, context.transform, g);
 
         Ok(())
     }
