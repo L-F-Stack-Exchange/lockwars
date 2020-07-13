@@ -32,14 +32,12 @@ fn main() -> Result<()> {
     let mut game = Game::new(game_settings).context("cannot create game")?;
 
     let mut cells = game.cells_mut();
-    let mut central_row = cells.row_mut(3);
-
-    central_row[0] = Cell {
+    cells[(3, 0)] = Cell {
         object: Some(Object {
             kind: ObjectKind::Key,
         }),
     };
-    central_row[11] = Cell {
+    cells[(3, 11)] = Cell {
         object: Some(Object {
             kind: ObjectKind::Key,
         }),
@@ -58,6 +56,8 @@ fn main() -> Result<()> {
             color: WHITE,
             radius: 1.0,
         },
+        object_percentage: 0.6,
+        object_outline: line::Line::new([0.8, 0.4, 0.4, 1.0], 1.0),
     };
     let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
 

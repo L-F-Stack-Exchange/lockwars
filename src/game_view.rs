@@ -1,8 +1,9 @@
 //! Handles game rendering.
 
-use crate::Game;
+use crate::{Game, Object, ObjectKind};
 use anyhow::{anyhow, Context as AnyhowContext, Result};
 use graphics::line;
+use graphics::math::Vec2d;
 use graphics::rectangle;
 use graphics::types::Color;
 use graphics::{Context, Graphics};
@@ -15,7 +16,8 @@ pub struct GameView {
 impl GameView {
     /// Creates a new game view.
     pub fn new(settings: GameViewSettings) -> Result<Self> {
-        check_percentage(settings.game_area_percentage).context("invalid margin percentage")?;
+        check_percentage(settings.game_area_percentage).context("invalid game area percentage")?;
+        check_percentage(settings.object_percentage).context("invalid object percentage")?;
 
         Ok(Self { settings })
     }
@@ -67,6 +69,22 @@ impl GameView {
 
         // draw background
         graphics::clear(settings.background_color, g);
+
+        // draw objects
+        for ((row, column), object) in game
+            .cells()
+            .indexed_iter()
+            .filter_map(|(index, cell)| Some((index, cell.object.as_ref()?)))
+        {
+            let row: f64 = u32::try_from(row).context("cannot draw objects")?.into();
+            let column: f64 = u32::try_from(column).context("cannot draw objects")?.into();
+
+            let position = [
+                game_area_left_x + column * cell_size,
+                game_area_top_y + row * cell_size,
+            ];
+            self.draw_object(object, position, cell_size, context, g)?;
+        }
 
         // draw vertical cell separators
         for pos in (1..n_columns).chain((n_columns + 1)..n_total_columns) {
@@ -141,6 +159,48 @@ impl GameView {
 
         Ok(())
     }
+
+    /// Draws the object at the specified position.
+    pub fn draw_object<G>(
+        &self,
+        object: &Object,
+        position: Vec2d,
+        cell_size: f64,
+        context: &Context,
+        g: &mut G,
+    ) -> Result<()>
+    where
+        G: Graphics,
+    {
+        // calculate layout
+        let settings = &self.settings;
+
+        let center_x = position[0] + cell_size * 0.5;
+        let center_y = position[1] + cell_size * 0.5;
+
+        let object_size = cell_size * settings.object_percentage;
+
+        let object_left_x = center_x - object_size * 0.5;
+        let object_right_x = center_x + object_size * 0.5;
+        let object_top_y = center_y - object_size * 0.5;
+        let object_bottom_y = center_y + object_size * 0.5;
+
+        // draw object
+        match object.kind {
+            ObjectKind::Key => {
+                // draw regular triangle
+                let offset = (1.0 - f64::sqrt(3.0) / 2.0) / 2.0 * object_size;
+                let outline = [
+                    [object_left_x, object_bottom_y - offset],
+                    [object_right_x, object_bottom_y - offset],
+                    [center_x, object_top_y + offset],
+                ];
+                draw_polygon_border(settings.object_outline, &outline, context, g);
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Clone)]
@@ -173,6 +233,13 @@ pub struct GameViewSettings {
 
     /// The border of the bases.
     pub base_border: rectangle::Border,
+
+    /// The percentage of a cell taken up by the object within,
+    /// in both the horizontal and vertical directions.
+    pub object_percentage: f64,
+
+    /// The outlines of objects
+    pub object_outline: line::Line,
 }
 
 /// Checks that the argument is within the range [0.0, 1.0].
@@ -181,5 +248,27 @@ fn check_percentage(number: f64) -> Result<()> {
         Ok(())
     } else {
         Err(anyhow!("{} is not a valid percentage", number))
+    }
+}
+
+/// Draws the specified polygon border.
+fn draw_polygon_border<G>(
+    line: line::Line,
+    polygon: graphics::types::Polygon,
+    context: &Context,
+    g: &mut G,
+) where
+    G: Graphics,
+{
+    use itertools::Itertools;
+
+    for (from, to) in polygon
+        .iter()
+        .copied()
+        .cycle()
+        .tuple_windows()
+        .take(polygon.len())
+    {
+        line.draw_from_to(from, to, &context.draw_state, context.transform, g);
     }
 }
