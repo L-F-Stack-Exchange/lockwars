@@ -39,7 +39,7 @@ fn main() -> Result<()> {
     };
     cells[(3, 11)] = Cell {
         object: Some(Object {
-            kind: ObjectKind::Key,
+            kind: ObjectKind::Fire,
         }),
     };
 
@@ -57,7 +57,8 @@ fn main() -> Result<()> {
             radius: 1.0,
         },
         object_percentage: 0.6,
-        object_outline: line::Line::new([0.8, 0.4, 0.4, 1.0], 1.0),
+        object_outline_color: [0.8, 0.4, 0.4, 1.0],
+        object_outline_radius: 1.0,
     };
     let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
 

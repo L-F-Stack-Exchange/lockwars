@@ -16,4 +16,6 @@ pub struct Object {
 pub enum ObjectKind {
     /// A key object.
     Key,
+    /// A fire object.
+    Fire,
 }

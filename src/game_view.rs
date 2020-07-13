@@ -172,6 +172,8 @@ impl GameView {
     where
         G: Graphics,
     {
+        use graphics::ellipse::Ellipse;
+
         // calculate layout
         let settings = &self.settings;
 
@@ -179,6 +181,7 @@ impl GameView {
         let center_y = position[1] + cell_size * 0.5;
 
         let object_size = cell_size * settings.object_percentage;
+        let object_area = rectangle::centered_square(center_x, center_y, object_size * 0.5);
 
         let object_left_x = center_x - object_size * 0.5;
         let object_right_x = center_x + object_size * 0.5;
@@ -195,7 +198,20 @@ impl GameView {
                     [object_right_x, object_bottom_y - offset],
                     [center_x, object_top_y + offset],
                 ];
-                draw_polygon_border(settings.object_outline, &outline, context, g);
+
+                let line = line::Line::new(
+                    settings.object_outline_color,
+                    settings.object_outline_radius,
+                );
+                draw_polygon_border(line, &outline, context, g);
+            }
+            ObjectKind::Fire => {
+                // draw circle
+                let circle = Ellipse::new_border(
+                    settings.object_outline_color,
+                    settings.object_outline_radius,
+                );
+                circle.draw(object_area, &context.draw_state, context.transform, g);
             }
         }
 
@@ -238,8 +254,11 @@ pub struct GameViewSettings {
     /// in both the horizontal and vertical directions.
     pub object_percentage: f64,
 
-    /// The outlines of objects
-    pub object_outline: line::Line,
+    /// The color of outlines of objects
+    pub object_outline_color: Color,
+
+    /// The radius of outlines of objects
+    pub object_outline_radius: f64,
 }
 
 /// Checks that the argument is within the range [0.0, 1.0].
