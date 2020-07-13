@@ -3,7 +3,7 @@ use glutin_window::GlutinWindow;
 use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
-use lockwars::{Game, GameSettings, GameView, GameViewSettings};
+use lockwars::{Cell, Game, GameSettings, GameView, GameViewSettings, Object, ObjectKind};
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{EventSettings, Events, RenderEvent, WindowSettings};
 
@@ -29,7 +29,21 @@ fn main() -> Result<()> {
         n_rows: 7,
         base_span: 2..5,
     };
-    let game = Game::new(game_settings).context("cannot create game")?;
+    let mut game = Game::new(game_settings).context("cannot create game")?;
+
+    let mut cells = game.cells_mut();
+    let mut central_row = cells.row_mut(3);
+
+    central_row[0] = Cell {
+        object: Some(Object {
+            kind: ObjectKind::Key,
+        }),
+    };
+    central_row[11] = Cell {
+        object: Some(Object {
+            kind: ObjectKind::Key,
+        }),
+    };
 
     let game_view_settings = GameViewSettings {
         background_color: BLACK,
