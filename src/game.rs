@@ -4,7 +4,7 @@
 //!
 //! The division line separates the two players' territories.
 
-use crate::Object;
+use crate::{Object, PlayerData, Players};
 use anyhow::{anyhow, Result};
 use ndarray::prelude::*;
 use std::ops::Range;
@@ -14,11 +14,14 @@ use std::ops::Range;
 pub struct Game {
     settings: GameSettings,
     cells: Array2<Cell>,
+    players: Players<PlayerData>,
 }
 
 impl Game {
     /// Creates a new game.
-    pub fn new(settings: GameSettings) -> Result<Self> {
+    ///
+    /// TODO: replace with `GameBuilder` API
+    pub fn new(settings: GameSettings, players: Players<PlayerData>) -> Result<Self> {
         if settings.n_columns == 0 {
             Err(anyhow!("game must contain at least one column"))
         } else if settings.n_rows == 0 {
@@ -34,6 +37,7 @@ impl Game {
             Ok(Self {
                 settings,
                 cells: Array2::from_shape_simple_fn((n_rows, n_total_columns), Cell::empty),
+                players,
             })
         }
     }
