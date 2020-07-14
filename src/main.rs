@@ -4,10 +4,11 @@ use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
 use lockwars::{
-    GameBuilder, GameSettings, GameView, GameViewSettings, Object, ObjectKind, PlayerData, Players,
+    GameBuilder, GameController, GameControllerSettings, GameSettings, GameView, GameViewSettings,
+    KeyBinding, Object, ObjectKind, PlayerData, Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
-use piston::{EventSettings, Events, RenderEvent, WindowSettings};
+use piston::{Button, ButtonEvent, EventSettings, Events, Key, RenderEvent, WindowSettings};
 
 const WINDOW_TITLE: &str = "Lockwars";
 const WINDOW_SIZE: (u32, u32) = (1280, 720);
@@ -39,7 +40,7 @@ fn main() -> Result<()> {
             selected_position: (3, 11),
         },
     };
-    let game = (|| -> Result<_> {
+    let mut game = (|| -> Result<_> {
         GameBuilder::new(game_settings)?
             .object(
                 (3, 0),
@@ -78,10 +79,31 @@ fn main() -> Result<()> {
     };
     let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
 
+    let game_controller_settings = GameControllerSettings {
+        key_binding: Players {
+            left: KeyBinding {
+                up: Button::Keyboard(Key::W),
+                down: Button::Keyboard(Key::S),
+                left: Button::Keyboard(Key::A),
+                right: Button::Keyboard(Key::D),
+            },
+            right: KeyBinding {
+                up: Button::Keyboard(Key::Up),
+                down: Button::Keyboard(Key::Down),
+                left: Button::Keyboard(Key::Left),
+                right: Button::Keyboard(Key::Right),
+            },
+        },
+    };
+    let mut game_controller = GameController::new(game_controller_settings);
+
     let event_settings = EventSettings::new();
     let mut events = Events::new(event_settings);
 
     while let Some(event) = events.next(&mut window) {
+        if let Some(args) = event.button_args() {
+            game_controller.button_event(&mut game, args)?;
+        }
         if let Some(args) = event.render_args() {
             gl.draw(args.viewport(), |context, g| {
                 game_view.draw(&game, &context, g)

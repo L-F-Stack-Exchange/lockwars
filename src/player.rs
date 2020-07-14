@@ -29,6 +29,15 @@ impl<T> std::ops::Index<Player> for Players<T> {
     }
 }
 
+impl<T> std::ops::IndexMut<Player> for Players<T> {
+    fn index_mut(&mut self, index: Player) -> &mut T {
+        match index {
+            Player::Left => &mut self.left,
+            Player::Right => &mut self.right,
+        }
+    }
+}
+
 /// The player data.
 #[derive(Clone, Debug)]
 pub struct PlayerData {

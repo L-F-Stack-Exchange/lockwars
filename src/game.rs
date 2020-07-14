@@ -4,10 +4,11 @@
 //!
 //! The division line separates the two players' territories.
 
-use crate::{Object, PlayerData, Players};
+use crate::{Object, Player, PlayerData, Players};
 use anyhow::{anyhow, Context, Result};
 use ndarray::prelude::*;
-use std::ops::Range;
+use std::convert::{TryFrom, TryInto};
+use std::ops::{Add, Range};
 
 /// The game state.
 ///
@@ -33,6 +34,35 @@ impl Game {
     /// Returns the players.
     pub fn players(&self) -> &Players<PlayerData> {
         &self.players
+    }
+
+    /// Moves the selection of the specified player.
+    pub fn move_selection(&mut self, player: Player, delta: (isize, isize)) -> Result<()> {
+        let n_rows = isize::try_from(self.settings.n_rows)?;
+        let n_columns = isize::try_from(self.settings.n_columns)?;
+
+        let offset = match player {
+            Player::Left => 0,
+            Player::Right => n_columns,
+        };
+
+        let (row, column) = self.players[player].selected_position;
+
+        let row = isize::try_from(row)?;
+        let column = isize::try_from(column)?;
+        let relative_column = column - offset;
+
+        self.players[player].selected_position = (
+            (isize::try_from(row)?.add(delta.0))
+                .rem_euclid(n_rows)
+                .try_into()?,
+            (isize::try_from(relative_column)?.add(delta.1))
+                .rem_euclid(n_columns)
+                .add(offset)
+                .try_into()?,
+        );
+
+        Ok(())
     }
 }
 
