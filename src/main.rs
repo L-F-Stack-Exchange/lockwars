@@ -4,7 +4,7 @@ use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
 use lockwars::{
-    Cell, Game, GameSettings, GameView, GameViewSettings, Object, ObjectKind, PlayerData, Players,
+    GameBuilder, GameSettings, GameView, GameViewSettings, Object, ObjectKind, PlayerData, Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{EventSettings, Events, RenderEvent, WindowSettings};
@@ -39,19 +39,24 @@ fn main() -> Result<()> {
             selected_position: (3, 11),
         },
     };
-    let mut game = Game::new(game_settings, players).context("cannot create game")?;
-
-    let mut cells = game.cells_mut();
-    cells[(3, 0)] = Cell {
-        object: Some(Object {
-            kind: ObjectKind::Key,
-        }),
-    };
-    cells[(3, 11)] = Cell {
-        object: Some(Object {
-            kind: ObjectKind::Fire,
-        }),
-    };
+    let game = (|| -> Result<_> {
+        GameBuilder::new(game_settings)?
+            .object(
+                (3, 0),
+                Object {
+                    kind: ObjectKind::Key,
+                },
+            )?
+            .object(
+                (3, 11),
+                Object {
+                    kind: ObjectKind::Fire,
+                },
+            )?
+            .players(players)
+            .finish()
+    })()
+    .context(anyhow!("cannot create game"))?;
 
     let game_view_settings = GameViewSettings {
         background_color: BLACK,
