@@ -64,6 +64,21 @@ impl Game {
 
         Ok(())
     }
+
+    /// Sets the cell at the specified position.
+    pub fn set_cell(
+        &mut self,
+        _player: Player,
+        position: (usize, usize),
+        new_cell: Cell,
+    ) -> Result<()> {
+        let cell = self
+            .cells
+            .get_mut(position)
+            .ok_or_else(|| anyhow!("invalid position"))?;
+        *cell = new_cell;
+        Ok(())
+    }
 }
 
 /// The game settings.

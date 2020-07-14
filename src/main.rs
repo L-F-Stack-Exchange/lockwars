@@ -86,14 +86,30 @@ fn main() -> Result<()> {
                 down: Button::Keyboard(Key::S),
                 left: Button::Keyboard(Key::A),
                 right: Button::Keyboard(Key::D),
+                remove: Button::Keyboard(Key::G),
+                place: [Key::T, Key::Y, Key::U]
+                    .iter()
+                    .copied()
+                    .map(Button::Keyboard)
+                    .collect(),
             },
             right: KeyBinding {
                 up: Button::Keyboard(Key::Up),
                 down: Button::Keyboard(Key::Down),
                 left: Button::Keyboard(Key::Left),
                 right: Button::Keyboard(Key::Right),
+                remove: Button::Keyboard(Key::NumPad0),
+                place: [Key::NumPad1, Key::NumPad2, Key::NumPad3]
+                    .iter()
+                    .copied()
+                    .map(Button::Keyboard)
+                    .collect(),
             },
         },
+        objects: vec![ObjectKind::Key, ObjectKind::Fire]
+            .into_iter()
+            .map(|kind| Object { kind })
+            .collect(),
     };
     let mut game_controller = GameController::new(game_controller_settings);
 
