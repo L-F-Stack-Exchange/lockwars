@@ -18,6 +18,17 @@ pub struct Players<T> {
     pub right: T,
 }
 
+impl<T> std::ops::Index<Player> for Players<T> {
+    type Output = T;
+
+    fn index(&self, index: Player) -> &T {
+        match index {
+            Player::Left => &self.left,
+            Player::Right => &self.right,
+        }
+    }
+}
+
 /// The player data.
 #[derive(Clone, Debug)]
 pub struct PlayerData {

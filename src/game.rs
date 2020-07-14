@@ -60,6 +60,11 @@ impl Game {
     pub fn cells_mut(&mut self) -> ArrayViewMut2<Cell> {
         self.cells.view_mut()
     }
+
+    /// Returns the players.
+    pub fn players(&self) -> &Players<PlayerData> {
+        &self.players
+    }
 }
 
 /// The game settings.

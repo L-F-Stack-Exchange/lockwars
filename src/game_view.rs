@@ -1,6 +1,6 @@
 //! Handles game rendering.
 
-use crate::{Game, Object, ObjectKind};
+use crate::{Game, Object, ObjectKind, Player};
 use anyhow::{anyhow, Context as AnyhowContext, Result};
 use graphics::line;
 use graphics::math::Vec2d;
@@ -69,6 +69,30 @@ impl GameView {
 
         // draw background
         graphics::clear(settings.background_color, g);
+
+        // draw selected cells
+        for player in [Player::Left, Player::Right].iter().copied() {
+            let (row, column) = game.players()[player].selected_position;
+
+            let row: f64 = u32::try_from(row)
+                .context("cannot draw selected cells")?
+                .into();
+            let column: f64 = u32::try_from(column)
+                .context("cannot draw selected cells")?
+                .into();
+
+            rectangle::Rectangle::new(settings.selected_cell_color).draw(
+                [
+                    game_area_left_x + column * cell_size,
+                    game_area_top_y + row * cell_size,
+                    cell_size,
+                    cell_size,
+                ],
+                &context.draw_state,
+                context.transform,
+                g,
+            );
+        }
 
         // draw objects
         for ((row, column), object) in game
@@ -259,6 +283,9 @@ pub struct GameViewSettings {
 
     /// The radius of outlines of objects
     pub object_outline_radius: f64,
+
+    /// The color of cells selected by players.
+    pub selected_cell_color: Color,
 }
 
 /// Checks that the argument is within the range [0.0, 1.0].
