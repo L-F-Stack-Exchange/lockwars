@@ -35,9 +35,11 @@ fn main() -> Result<()> {
     let players = Players {
         left: PlayerData {
             selected_position: (3, 0),
+            keys: 200,
         },
         right: PlayerData {
             selected_position: (3, 11),
+            keys: 200,
         },
     };
     let mut game = (|| -> Result<_> {

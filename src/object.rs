@@ -9,6 +9,16 @@ pub struct Object {
     pub kind: ObjectKind,
 }
 
+impl Object {
+    /// Returns the cost of the object.
+    pub fn cost(&self) -> u32 {
+        match self.kind {
+            ObjectKind::Key => 20,
+            ObjectKind::Fire => 40,
+        }
+    }
+}
+
 /// The kind of an object.
 ///
 /// Contains kind-specific object information.

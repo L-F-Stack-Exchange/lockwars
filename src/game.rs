@@ -66,18 +66,31 @@ impl Game {
     }
 
     /// Sets the cell at the specified position.
+    ///
+    /// Returns `None` if the player does not have enough keys.
     pub fn set_cell(
         &mut self,
-        _player: Player,
+        player: Player,
         position: (usize, usize),
         new_cell: Cell,
-    ) -> Result<()> {
+    ) -> Result<Option<()>> {
         let cell = self
             .cells
             .get_mut(position)
             .ok_or_else(|| anyhow!("invalid position"))?;
+
+        if let Some(object) = &new_cell.object {
+            let keys = &mut self.players[player].keys;
+            let cost = object.cost();
+
+            *keys = match keys.checked_sub(cost) {
+                None => return Ok(None),
+                Some(remaining_keys) => remaining_keys,
+            };
+        }
         *cell = new_cell;
-        Ok(())
+
+        Ok(Some(()))
     }
 }
 
