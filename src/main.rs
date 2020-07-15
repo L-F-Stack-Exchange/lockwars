@@ -31,6 +31,7 @@ fn main() -> Result<()> {
         n_columns: 6,
         n_rows: 7,
         base_span: 2..5,
+        max_keys: 1000,
     };
     let players = Players {
         left: PlayerData {
@@ -78,6 +79,12 @@ fn main() -> Result<()> {
         object_outline_color: [0.8, 0.4, 0.4, 1.0],
         object_outline_radius: 1.0,
         selected_cell_color: [0.0, 0.2, 0.0, 1.0],
+        key_bar_border: rectangle::Border {
+            color: WHITE,
+            radius: 1.0,
+        },
+        key_bar_division_line: line::Line::new(WHITE, 1.0),
+        key_bar_color: WHITE,
     };
     let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
 

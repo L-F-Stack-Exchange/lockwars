@@ -181,6 +181,54 @@ impl GameView {
         let border = rectangle::Rectangle::new(TRANSPARENT).border(settings.game_area_border);
         border.draw(game_area, &context.draw_state, context.transform, g);
 
+        // draw the key bar
+        let bottom_margin_height = view_height - game_area_bottom_y;
+        let key_bar_height = bottom_margin_height / 4.0;
+
+        let key_bar_top_y = game_area_bottom_y + bottom_margin_height / 4.0;
+        let key_bar_bottom_y = game_area_bottom_y + bottom_margin_height / 2.0;
+
+        let key_bar_area = rectangle::rectangle_by_corners(
+            game_area_left_x,
+            key_bar_top_y,
+            game_area_right_x,
+            key_bar_bottom_y,
+        );
+
+        let border = rectangle::Rectangle::new(TRANSPARENT).border(settings.key_bar_border);
+        border.draw(key_bar_area, &context.draw_state, context.transform, g);
+
+        // draw the key bar division line
+        settings.key_bar_division_line.draw_from_to(
+            [center_x, key_bar_top_y],
+            [center_x, key_bar_bottom_y],
+            &context.draw_state,
+            context.transform,
+            g,
+        );
+
+        // fill the key bar
+        let key_bar_width = game_area_width / 2.0;
+        let max_keys: f64 = game.settings().max_keys.into();
+
+        for (player, offset) in [(Player::Left, 0.0), (Player::Right, key_bar_width)]
+            .iter()
+            .copied()
+        {
+            let filled_area = [
+                game_area_left_x + offset,
+                key_bar_top_y,
+                f64::from(game.players()[player].keys) / max_keys * key_bar_width,
+                key_bar_height,
+            ];
+            rectangle::Rectangle::new(settings.key_bar_color).draw(
+                filled_area,
+                &context.draw_state,
+                context.transform,
+                g,
+            );
+        }
+
         Ok(())
     }
 
@@ -286,6 +334,15 @@ pub struct GameViewSettings {
 
     /// The color of cells selected by players.
     pub selected_cell_color: Color,
+
+    /// The border of the key bar.
+    pub key_bar_border: rectangle::Border,
+
+    /// The line that separates the players' areas in the key bar.
+    pub key_bar_division_line: line::Line,
+
+    /// The color to fill the key bar.
+    pub key_bar_color: Color,
 }
 
 /// Checks that the argument is within the range [0.0, 1.0].

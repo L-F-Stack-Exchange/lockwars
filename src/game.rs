@@ -107,6 +107,9 @@ pub struct GameSettings {
 
     /// The rows that the bases span.
     pub base_span: Range<usize>,
+
+    /// The maximum amount of keys each player can have.
+    pub max_keys: u32,
 }
 
 /// Builds a game.
