@@ -1,6 +1,6 @@
 //! Handles game rendering.
 
-use crate::{Game, Object, ObjectKind, Player};
+use crate::{GameController, Object, ObjectKind, Player};
 use anyhow::{anyhow, Context as AnyhowContext, Result};
 use graphics::line;
 use graphics::math::Vec2d;
@@ -23,12 +23,19 @@ impl GameView {
     }
 
     /// Draws the game on the screen.
-    pub fn draw<G>(&self, game: &Game, context: &Context, g: &mut G) -> Result<()>
+    pub fn draw<G>(
+        &self,
+        game_controller: &GameController,
+        context: &Context,
+        g: &mut G,
+    ) -> Result<()>
     where
         G: Graphics,
     {
         use graphics::color::TRANSPARENT;
         use std::convert::TryFrom;
+
+        let game = game_controller.game();
 
         // calculate layout
         let settings = &self.settings;

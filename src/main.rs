@@ -43,7 +43,7 @@ fn main() -> Result<()> {
             keys: 200,
         },
     };
-    let mut game = (|| -> Result<_> {
+    let game = (|| -> Result<_> {
         GameBuilder::new(game_settings)?
             .object(
                 (3, 0),
@@ -120,18 +120,18 @@ fn main() -> Result<()> {
             .map(|kind| Object { kind })
             .collect(),
     };
-    let mut game_controller = GameController::new(game_controller_settings);
+    let mut game_controller = GameController::new(game_controller_settings, game);
 
     let event_settings = EventSettings::new();
     let mut events = Events::new(event_settings);
 
     while let Some(event) = events.next(&mut window) {
         if let Some(args) = event.button_args() {
-            game_controller.button_event(&mut game, args)?;
+            game_controller.button_event(args)?;
         }
         if let Some(args) = event.render_args() {
             gl.draw(args.viewport(), |context, g| {
-                game_view.draw(&game, &context, g)
+                game_view.draw(&game_controller, &context, g)
             })?;
         }
     }

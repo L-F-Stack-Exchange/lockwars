@@ -13,7 +13,7 @@ use std::ops::{Add, Range};
 /// The game state.
 ///
 /// Use the [`GameBuilder`] API to build a game.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Game {
     settings: GameSettings,
     cells: Array2<Cell>,

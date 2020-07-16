@@ -9,17 +9,24 @@ use std::borrow::Borrow;
 #[derive(Clone, Debug)]
 pub struct GameController {
     settings: GameControllerSettings,
+    game: Game,
 }
 
 impl GameController {
     /// Creates a new game controller.
-    pub fn new(settings: GameControllerSettings) -> Self {
-        Self { settings }
+    pub fn new(settings: GameControllerSettings, game: Game) -> Self {
+        Self { settings, game }
+    }
+
+    /// Returns a reference to the game being controlled.
+    pub fn game(&self) -> &Game {
+        &self.game
     }
 
     /// Handles a button event.
-    pub fn button_event(&mut self, game: &mut Game, args: ButtonArgs) -> Result<()> {
+    pub fn button_event(&mut self, args: ButtonArgs) -> Result<()> {
         let settings = &self.settings;
+        let game = &mut self.game;
 
         if args.state != ButtonState::Release {
             return Ok(());
