@@ -41,8 +41,6 @@ impl<T> std::ops::IndexMut<Player> for Players<T> {
 /// The player data.
 #[derive(Clone, Debug)]
 pub struct PlayerData {
-    /// The index of the selected cell.
-    pub selected_position: (usize, usize),
     /// The amount of keys the player owns.
     pub keys: u32,
 }
