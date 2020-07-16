@@ -79,7 +79,7 @@ impl GameView {
 
         // draw selected cells
         for player in [Player::Left, Player::Right].iter().copied() {
-            let (row, column) = game.players()[player].selected_position;
+            let (row, column) = game_controller.selected_cells()[player];
 
             let row: f64 = u32::try_from(row)
                 .context("cannot draw selected cells")?

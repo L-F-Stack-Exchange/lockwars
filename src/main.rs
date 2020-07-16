@@ -34,14 +34,8 @@ fn main() -> Result<()> {
         max_keys: 1000,
     };
     let players = Players {
-        left: PlayerData {
-            selected_position: (3, 0),
-            keys: 200,
-        },
-        right: PlayerData {
-            selected_position: (3, 11),
-            keys: 200,
-        },
+        left: PlayerData { keys: 200 },
+        right: PlayerData { keys: 200 },
     };
     let game = (|| -> Result<_> {
         GameBuilder::new(game_settings)?
@@ -119,8 +113,13 @@ fn main() -> Result<()> {
             .into_iter()
             .map(|kind| Object { kind })
             .collect(),
+        selected_cells: Players {
+            left: (3, 0),
+            right: (3, 11),
+        },
     };
-    let mut game_controller = GameController::new(game_controller_settings, game);
+    let mut game_controller = GameController::new(game_controller_settings, game)
+        .with_context(|| anyhow!("cannot create game controller"))?;
 
     let event_settings = EventSettings::new();
     let mut events = Events::new(event_settings);
