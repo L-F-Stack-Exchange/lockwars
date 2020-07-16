@@ -120,7 +120,7 @@ impl GameView {
         // draw vertical cell separators
         for pos in (1..n_columns).chain((n_columns + 1)..n_total_columns) {
             let pos: f64 = u32::try_from(pos)
-                .context(anyhow!("cannot draw cell separators"))?
+                .context("cannot draw cell separators")?
                 .into();
             let x = center_x + (pos - n_columns_f64) * cell_size;
 
@@ -136,7 +136,7 @@ impl GameView {
         // draw horizontal cell separators
         for pos in 1..n_rows {
             let pos: f64 = u32::try_from(pos)
-                .context(anyhow!("cannot draw cell separators"))?
+                .context("cannot draw cell separators")?
                 .into();
             let y = game_area_top_y + pos * cell_size;
 
@@ -162,10 +162,10 @@ impl GameView {
         let border = rectangle::Rectangle::new(TRANSPARENT).border(settings.base_border);
 
         let base_start: f64 = u32::try_from(game.settings().base_span.start)
-            .context(anyhow!("cannot draw base border"))?
+            .context("cannot draw base border")?
             .into();
         let base_end: f64 = u32::try_from(game.settings().base_span.end)
-            .context(anyhow!("cannot draw base border"))?
+            .context("cannot draw base border")?
             .into();
 
         let left_base = rectangle::rectangle_by_corners(

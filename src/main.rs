@@ -54,7 +54,7 @@ fn main() -> Result<()> {
             .players(players)
             .finish()
     })()
-    .context(anyhow!("cannot create game"))?;
+    .context("cannot create game")?;
 
     let game_view_settings = GameViewSettings {
         background_color: BLACK,
@@ -119,7 +119,7 @@ fn main() -> Result<()> {
         },
     };
     let mut game_controller = GameController::new(game_controller_settings, game)
-        .with_context(|| anyhow!("cannot create game controller"))?;
+        .context("cannot create game controller")?;
 
     let event_settings = EventSettings::new();
     let mut events = Events::new(event_settings);
