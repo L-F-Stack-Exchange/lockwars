@@ -115,10 +115,7 @@ impl GameBuilder {
 
     /// Presets an object.
     pub fn object(mut self, index: (usize, usize), object: Object) -> Result<Self> {
-        let mut cell = self
-            .cells
-            .get_mut(index)
-            .context(anyhow!("cannot preset object"))?;
+        let mut cell = self.cells.get_mut(index).context("cannot preset object")?;
         cell.object = Some(object);
         Ok(self)
     }
