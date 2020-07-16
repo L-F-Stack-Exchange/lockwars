@@ -35,32 +35,50 @@ impl Game {
         &self.players
     }
 
-    /// Sets the cell at the specified position.
+    /// Clears the cell at the specified position.
+    pub fn clear_cell(&mut self, _player: Player, position: (usize, usize)) -> Result<()> {
+        let cell = self
+            .cells
+            .get_mut(position)
+            .ok_or_else(|| anyhow!("invalid position"))?;
+        cell.object = None;
+        Ok(())
+    }
+
+    /// Places an object at the specified position
+    /// according to the specified object index.
     ///
-    /// Returns `None` if the player does not have enough keys.
-    pub fn set_cell(
+    /// The player's keys are deducted accordingly.
+    /// Returns `true` if the placement is successful,
+    /// or `false` if the player does not have enough keys.
+    pub fn place_object(
         &mut self,
         player: Player,
         position: (usize, usize),
-        new_cell: Cell,
-    ) -> Result<Option<()>> {
+        index: usize,
+    ) -> Result<bool> {
+        let keys = &mut self.players[player].keys;
         let cell = self
             .cells
             .get_mut(position)
             .ok_or_else(|| anyhow!("invalid position"))?;
 
-        if let Some(object) = &new_cell.object {
-            let keys = &mut self.players[player].keys;
-            let cost = object.cost();
+        let settings = &self.settings;
+        let cost = *settings.costs.get(index).context("invalid index")?;
 
-            *keys = match keys.checked_sub(cost) {
-                None => return Ok(None),
-                Some(remaining_keys) => remaining_keys,
-            };
-        }
-        *cell = new_cell;
+        *keys = match keys.checked_sub(cost) {
+            None => return Ok(false),
+            Some(remaining_keys) => remaining_keys,
+        };
 
-        Ok(Some(()))
+        cell.object = Some(
+            settings
+                .objects
+                .get(index)
+                .context("invalid index")?
+                .clone(),
+        );
+        Ok(true)
     }
 }
 
@@ -80,6 +98,16 @@ pub struct GameSettings {
 
     /// The maximum amount of keys each player can have.
     pub max_keys: u32,
+
+    /// The objects that can be placed in the game.
+    ///
+    /// Each object is assigned an index,
+    /// which is equal to its position in `objects`.
+    pub objects: Vec<Object>,
+
+    /// The costs of placing objects,
+    /// following the index of objects.
+    pub costs: Vec<u32>,
 }
 
 /// Builds a game.

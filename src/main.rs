@@ -32,6 +32,11 @@ fn main() -> Result<()> {
         n_rows: 7,
         base_span: 2..5,
         max_keys: 1000,
+        objects: vec![ObjectKind::Key, ObjectKind::Fire]
+            .into_iter()
+            .map(|kind| Object { kind })
+            .collect(),
+        costs: vec![20, 40],
     };
     let players = Players {
         left: PlayerData { keys: 200 },
@@ -109,10 +114,6 @@ fn main() -> Result<()> {
                     .collect(),
             },
         },
-        objects: vec![ObjectKind::Key, ObjectKind::Fire]
-            .into_iter()
-            .map(|kind| Object { kind })
-            .collect(),
         selected_cells: Players {
             left: (3, 0),
             right: (3, 11),

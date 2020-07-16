@@ -1,6 +1,6 @@
 //! The game controller.
 
-use crate::{Cell, Game, Object, Player, Players};
+use crate::{Game, Player, Players};
 use anyhow::{anyhow, Result};
 use piston::{Button, ButtonArgs, ButtonState};
 use std::borrow::Borrow;
@@ -61,16 +61,14 @@ impl GameController {
             let selected_cell = self.selected_cells[player];
 
             if args.button == key_binding.remove {
-                game.set_cell(player, selected_cell, Cell::empty())?;
-            } else if let Some(index) = find(&key_binding.place, &args.button) {
-                let object = match settings.objects.get(index) {
-                    None => continue,
-                    Some(object) => object.clone(),
-                };
-                let cell = Cell {
-                    object: Some(object),
-                };
-                game.set_cell(player, selected_cell, cell)?;
+                game.clear_cell(player, selected_cell)?;
+            }
+
+            if let Some(index) = find(&key_binding.place, &args.button) {
+                if index >= game.settings().objects.len() {
+                    continue;
+                }
+                game.place_object(player, selected_cell, index)?;
             }
 
             let delta = if args.button == key_binding.up {
@@ -131,12 +129,6 @@ impl GameController {
 pub struct GameControllerSettings {
     /// The key binding for players.
     pub key_binding: Players<KeyBinding>,
-
-    /// The objects that can be placed in the game.
-    ///
-    /// Each object is assigned an index,
-    /// which is equal to its position in `objects`.
-    pub objects: Vec<Object>,
 
     /// Initial selected cells.
     pub selected_cells: Players<(usize, usize)>,
