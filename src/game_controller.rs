@@ -2,7 +2,7 @@
 
 use crate::{Game, Player, Players};
 use anyhow::{anyhow, Result};
-use piston::{Button, ButtonArgs, ButtonState};
+use piston::{Button, ButtonArgs, ButtonState, UpdateArgs};
 use std::borrow::Borrow;
 
 /// A game controller that handles input events.
@@ -65,7 +65,7 @@ impl GameController {
             }
 
             if let Some(index) = find(&key_binding.place, &args.button) {
-                if index >= game.settings().objects.len() {
+                if index >= game.settings().object_kinds.len() {
                     continue;
                 }
                 game.place_object(player, selected_cell, index)?;
@@ -121,6 +121,11 @@ impl GameController {
         );
 
         Ok(())
+    }
+
+    /// Handles an update event.
+    pub fn update_event(&mut self, _args: UpdateArgs) -> Result<()> {
+        self.game.update()
     }
 }
 

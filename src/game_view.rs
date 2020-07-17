@@ -269,7 +269,7 @@ impl GameView {
 
         // draw object
         match object.kind {
-            ObjectKind::Key => {
+            ObjectKind::Key { .. } => {
                 // draw regular triangle
                 let offset = (1.0 - f64::sqrt(3.0) / 2.0) / 2.0 * object_size;
                 let outline = [
