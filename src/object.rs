@@ -1,5 +1,7 @@
 //! The objects in the game.
 
+use crate::{Cooldown, Player};
+
 /// An object.
 #[derive(Clone, Debug)]
 pub struct Object {
@@ -7,6 +9,9 @@ pub struct Object {
     ///
     /// Contains kind-specific object information.
     pub kind: ObjectKind,
+
+    /// The owner of the object.
+    pub owner: Player,
 }
 
 /// The kind of an object.
@@ -15,7 +20,10 @@ pub struct Object {
 #[derive(Clone, Debug)]
 pub enum ObjectKind {
     /// A key object.
-    Key,
+    Key {
+        /// The cooldown for key generation.
+        cooldown: Cooldown,
+    },
     /// A fire object.
     Fire,
 }

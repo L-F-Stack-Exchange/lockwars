@@ -4,11 +4,14 @@ use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
 use lockwars::{
-    GameBuilder, GameController, GameControllerSettings, GameSettings, GameView, GameViewSettings,
-    KeyBinding, Object, ObjectKind, PlayerData, Players,
+    Cooldown, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
+    GameViewSettings, KeyBinding, ObjectKind, Player, PlayerData, Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
-use piston::{Button, ButtonEvent, EventSettings, Events, Key, RenderEvent, WindowSettings};
+use piston::{
+    Button, ButtonEvent, EventSettings, Events, Key, RenderEvent, UpdateEvent, WindowSettings,
+};
+use std::time::Duration;
 
 const WINDOW_TITLE: &str = "Lockwars";
 const WINDOW_SIZE: (u32, u32) = (1280, 720);
@@ -32,11 +35,14 @@ fn main() -> Result<()> {
         n_rows: 7,
         base_span: 2..5,
         max_keys: 1000,
-        objects: vec![ObjectKind::Key, ObjectKind::Fire]
-            .into_iter()
-            .map(|kind| Object { kind })
-            .collect(),
+        object_kinds: vec![
+            ObjectKind::Key {
+                cooldown: Cooldown::new(Duration::from_secs(1)),
+            },
+            ObjectKind::Fire,
+        ],
         costs: vec![20, 40],
+        key_generation: 10,
     };
     let players = Players {
         left: PlayerData { keys: 200 },
@@ -46,15 +52,17 @@ fn main() -> Result<()> {
         GameBuilder::new(game_settings)?
             .object(
                 (3, 0),
-                Object {
-                    kind: ObjectKind::Key,
+                ObjectKind::Key {
+                    cooldown: Cooldown::new(Duration::from_secs(1)),
                 },
+                Player::Left,
             )?
             .object(
                 (3, 11),
-                Object {
-                    kind: ObjectKind::Fire,
+                ObjectKind::Key {
+                    cooldown: Cooldown::new(Duration::from_secs(1)),
                 },
+                Player::Right,
             )?
             .players(players)
             .finish()
@@ -133,6 +141,9 @@ fn main() -> Result<()> {
             gl.draw(args.viewport(), |context, g| {
                 game_view.draw(&game_controller, &context, g)
             })?;
+        }
+        if let Some(args) = event.update_args() {
+            game_controller.update_event(args)?;
         }
     }
 
