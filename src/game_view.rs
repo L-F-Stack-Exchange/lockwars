@@ -114,7 +114,7 @@ impl GameView {
                 game_area_left_x + column * cell_size,
                 game_area_top_y + row * cell_size,
             ];
-            self.draw_object(object, position, cell_size, context, g)?;
+            self.draw_object(&object.object, position, cell_size, context, g)?;
         }
 
         // draw vertical cell separators

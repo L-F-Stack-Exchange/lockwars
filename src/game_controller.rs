@@ -65,7 +65,7 @@ impl GameController {
             }
 
             if let Some(index) = find(&key_binding.place, &args.button) {
-                if index >= game.settings().object_kinds.len() {
+                if index >= game.settings().objects.len() {
                     continue;
                 }
                 game.place_object(player, selected_cell, index)?;

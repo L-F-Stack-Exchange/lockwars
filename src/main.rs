@@ -5,7 +5,7 @@ use graphics::line;
 use graphics::rectangle;
 use lockwars::{
     Cooldown, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
-    GameViewSettings, KeyBinding, ObjectKind, Player, PlayerData, Players,
+    GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Player, PlayerData, Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{
@@ -35,11 +35,15 @@ fn main() -> Result<()> {
         n_rows: 7,
         base_span: 2..5,
         max_keys: 1000,
-        object_kinds: vec![
-            ObjectKind::Key {
-                cooldown: Cooldown::new(Duration::from_secs(1)),
+        objects: vec![
+            Object {
+                kind: ObjectKind::Key {
+                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                },
             },
-            ObjectKind::Fire,
+            Object {
+                kind: ObjectKind::Fire,
+            },
         ],
         costs: vec![20, 40],
         key_generation: 10,
@@ -52,17 +56,25 @@ fn main() -> Result<()> {
         GameBuilder::new(game_settings)?
             .object(
                 (3, 0),
-                ObjectKind::Key {
-                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                OwnedObject {
+                    object: Object {
+                        kind: ObjectKind::Key {
+                            cooldown: Cooldown::new(Duration::from_secs(1)),
+                        },
+                    },
+                    owner: Player::Left,
                 },
-                Player::Left,
             )?
             .object(
                 (3, 11),
-                ObjectKind::Key {
-                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                OwnedObject {
+                    object: Object {
+                        kind: ObjectKind::Key {
+                            cooldown: Cooldown::new(Duration::from_secs(1)),
+                        },
+                    },
+                    owner: Player::Right,
                 },
-                Player::Right,
             )?
             .players(players)
             .finish()

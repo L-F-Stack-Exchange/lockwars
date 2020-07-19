@@ -9,9 +9,6 @@ pub struct Object {
     ///
     /// Contains kind-specific object information.
     pub kind: ObjectKind,
-
-    /// The owner of the object.
-    pub owner: Player,
 }
 
 /// The kind of an object.
@@ -26,4 +23,14 @@ pub enum ObjectKind {
     },
     /// A fire object.
     Fire,
+}
+
+/// An object owned by a player.
+#[derive(Clone, Debug)]
+pub struct OwnedObject {
+    /// The object.
+    pub object: Object,
+
+    /// The owner of the object.
+    pub owner: Player,
 }
