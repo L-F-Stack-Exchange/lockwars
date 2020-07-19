@@ -40,9 +40,13 @@ fn main() -> Result<()> {
                 kind: ObjectKind::Key {
                     cooldown: Cooldown::new(Duration::from_secs(1)),
                 },
+                health: 100,
+                max_health: 100,
             },
             Object {
                 kind: ObjectKind::Fire,
+                health: 100,
+                max_health: 100,
             },
         ],
         costs: vec![20, 40],
@@ -61,6 +65,8 @@ fn main() -> Result<()> {
                         kind: ObjectKind::Key {
                             cooldown: Cooldown::new(Duration::from_secs(1)),
                         },
+                        health: u32::MAX,
+                        max_health: u32::MAX,
                     },
                     owner: Player::Left,
                 },
@@ -72,6 +78,8 @@ fn main() -> Result<()> {
                         kind: ObjectKind::Key {
                             cooldown: Cooldown::new(Duration::from_secs(1)),
                         },
+                        health: u32::MAX,
+                        max_health: u32::MAX,
                     },
                     owner: Player::Right,
                 },

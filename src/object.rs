@@ -9,6 +9,12 @@ pub struct Object {
     ///
     /// Contains kind-specific object information.
     pub kind: ObjectKind,
+
+    /// The health of the object.
+    pub health: u32,
+
+    /// The maximum health of the object.
+    pub max_health: u32,
 }
 
 /// The kind of an object.
