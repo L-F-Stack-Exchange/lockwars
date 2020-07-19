@@ -256,8 +256,13 @@ impl GameView {
         // calculate layout
         let settings = &self.settings;
 
-        let center_x = position[0] + cell_size * 0.5;
-        let center_y = position[1] + cell_size * 0.5;
+        let cell_left_x = position[0];
+        let cell_right_x = cell_left_x + cell_size;
+        let cell_top_y = position[1];
+        // let cell_bottom_y = cell_top_y + cell_size;
+
+        let center_x = cell_left_x + cell_size * 0.5;
+        let center_y = cell_top_y + cell_size * 0.5;
 
         let object_size = cell_size * settings.object_percentage;
         let object_area = rectangle::centered_square(center_x, center_y, object_size * 0.5);
@@ -293,6 +298,46 @@ impl GameView {
                 circle.draw(object_area, &context.draw_state, context.transform, g);
             }
         }
+
+        // draw health bar
+        let health_bar_height = cell_size * settings.health_bar_height_percentage;
+        let health_bar_width = cell_size * settings.health_bar_width_percentage;
+
+        let health_bar_center_x = (object_right_x + cell_right_x) / 2.0;
+        let health_bar_center_y = center_y;
+
+        let health_bar_area = rectangle::centered([
+            health_bar_center_x,
+            health_bar_center_y,
+            health_bar_width / 2.0,
+            health_bar_height / 2.0,
+        ]);
+
+        let [health_bar_left_x, health_bar_top_y, ..] = health_bar_area;
+        let health_bar_right_x = health_bar_left_x + health_bar_width;
+        let health_bar_bottom_y = health_bar_top_y + health_bar_height;
+
+        rectangle::Rectangle::new(settings.health_bar_background).draw(
+            health_bar_area,
+            &context.draw_state,
+            context.transform,
+            g,
+        );
+
+        // fill the health bar
+        let filled_area = rectangle::rectangle_by_corners(
+            health_bar_left_x,
+            health_bar_bottom_y
+                - f64::from(object.health) / f64::from(object.max_health) * health_bar_height,
+            health_bar_right_x,
+            health_bar_bottom_y,
+        );
+        rectangle::Rectangle::new(settings.health_bar_color).draw(
+            filled_area,
+            &context.draw_state,
+            context.transform,
+            g,
+        );
 
         Ok(())
     }
@@ -350,6 +395,20 @@ pub struct GameViewSettings {
 
     /// The color to fill the key bar.
     pub key_bar_color: Color,
+
+    /// The height of the health bar,
+    /// as a percentage of the cell size.
+    pub health_bar_height_percentage: f64,
+
+    /// The height of the health bar,
+    /// as a percentage of the cell size.
+    pub health_bar_width_percentage: f64,
+
+    /// The background color of the health bar.
+    pub health_bar_background: Color,
+
+    /// The color to fill the health bar.
+    pub health_bar_color: Color,
 }
 
 /// Checks that the argument is within the range [0.0, 1.0].
