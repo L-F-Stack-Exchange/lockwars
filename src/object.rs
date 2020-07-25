@@ -28,7 +28,12 @@ pub enum ObjectKind {
         cooldown: Cooldown,
     },
     /// A fire object.
-    Fire,
+    Fire {
+        /// The amount of damage dealt by the fire object.
+        damage: u32,
+        /// The cooldown for attack.
+        cooldown: Cooldown,
+    },
 }
 
 /// An object owned by a player.

@@ -9,6 +9,16 @@ pub enum Player {
     Right,
 }
 
+impl Player {
+    /// Returns the opposite player.
+    pub fn toggle(self) -> Player {
+        match self {
+            Player::Left => Player::Right,
+            Player::Right => Player::Left,
+        }
+    }
+}
+
 /// A container that holds the same data for both players.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Players<T> {

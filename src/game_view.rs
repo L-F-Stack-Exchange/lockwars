@@ -102,19 +102,21 @@ impl GameView {
         }
 
         // draw objects
-        for ((row, column), object) in game
-            .cells()
-            .indexed_iter()
-            .filter_map(|(index, cell)| Some((index, cell.object.as_ref()?)))
-        {
+        for ((row, column), cell) in game.cells().indexed_iter() {
             let row: f64 = u32::try_from(row).context("cannot draw objects")?.into();
             let column: f64 = u32::try_from(column).context("cannot draw objects")?.into();
+
+            let cell = cell.borrow();
+            let object = match &cell.object {
+                None => continue,
+                Some(object) => &object.object,
+            };
 
             let position = [
                 game_area_left_x + column * cell_size,
                 game_area_top_y + row * cell_size,
             ];
-            self.draw_object(&object.object, position, cell_size, context, g)?;
+            self.draw_object(object, position, cell_size, context, g)?;
         }
 
         // draw vertical cell separators
@@ -289,7 +291,7 @@ impl GameView {
                 );
                 draw_polygon_border(line, &outline, context, g);
             }
-            ObjectKind::Fire => {
+            ObjectKind::Fire { .. } => {
                 // draw circle
                 let circle = Ellipse::new_border(
                     settings.object_outline_color,

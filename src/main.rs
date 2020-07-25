@@ -44,7 +44,10 @@ fn main() -> Result<()> {
                 max_health: 100,
             },
             Object {
-                kind: ObjectKind::Fire,
+                kind: ObjectKind::Fire {
+                    damage: 20,
+                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                },
                 health: 100,
                 max_health: 100,
             },
