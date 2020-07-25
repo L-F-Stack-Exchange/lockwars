@@ -5,7 +5,7 @@ use graphics::line;
 use graphics::rectangle;
 use lockwars::{
     Cooldown, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
-    GameViewSettings, KeyBinding, ObjectKind, Player, PlayerData, Players,
+    GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Player, PlayerData, Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{
@@ -35,11 +35,22 @@ fn main() -> Result<()> {
         n_rows: 7,
         base_span: 2..5,
         max_keys: 1000,
-        object_kinds: vec![
-            ObjectKind::Key {
-                cooldown: Cooldown::new(Duration::from_secs(1)),
+        objects: vec![
+            Object {
+                kind: ObjectKind::Key {
+                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                },
+                health: 100,
+                max_health: 100,
             },
-            ObjectKind::Fire,
+            Object {
+                kind: ObjectKind::Fire {
+                    damage: 20,
+                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                },
+                health: 100,
+                max_health: 100,
+            },
         ],
         costs: vec![20, 40],
         key_generation: 10,
@@ -52,17 +63,29 @@ fn main() -> Result<()> {
         GameBuilder::new(game_settings)?
             .object(
                 (3, 0),
-                ObjectKind::Key {
-                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                OwnedObject {
+                    object: Object {
+                        kind: ObjectKind::Key {
+                            cooldown: Cooldown::new(Duration::from_secs(1)),
+                        },
+                        health: u32::MAX,
+                        max_health: u32::MAX,
+                    },
+                    owner: Player::Left,
                 },
-                Player::Left,
             )?
             .object(
                 (3, 11),
-                ObjectKind::Key {
-                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                OwnedObject {
+                    object: Object {
+                        kind: ObjectKind::Key {
+                            cooldown: Cooldown::new(Duration::from_secs(1)),
+                        },
+                        health: u32::MAX,
+                        max_health: u32::MAX,
+                    },
+                    owner: Player::Right,
                 },
-                Player::Right,
             )?
             .players(players)
             .finish()
@@ -92,6 +115,10 @@ fn main() -> Result<()> {
         },
         key_bar_division_line: line::Line::new(WHITE, 1.0),
         key_bar_color: WHITE,
+        health_bar_height_percentage: 0.7,
+        health_bar_width_percentage: 0.04,
+        health_bar_background: [0.4, 0.2, 0.2, 1.0],
+        health_bar_color: [0.8, 0.4, 0.4, 1.0],
     };
     let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
 

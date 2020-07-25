@@ -10,8 +10,11 @@ pub struct Object {
     /// Contains kind-specific object information.
     pub kind: ObjectKind,
 
-    /// The owner of the object.
-    pub owner: Player,
+    /// The health of the object.
+    pub health: u32,
+
+    /// The maximum health of the object.
+    pub max_health: u32,
 }
 
 /// The kind of an object.
@@ -25,5 +28,20 @@ pub enum ObjectKind {
         cooldown: Cooldown,
     },
     /// A fire object.
-    Fire,
+    Fire {
+        /// The amount of damage dealt by the fire object.
+        damage: u32,
+        /// The cooldown for attack.
+        cooldown: Cooldown,
+    },
+}
+
+/// An object owned by a player.
+#[derive(Clone, Debug)]
+pub struct OwnedObject {
+    /// The object.
+    pub object: Object,
+
+    /// The owner of the object.
+    pub owner: Player,
 }
