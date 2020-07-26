@@ -5,7 +5,8 @@ use graphics::line;
 use graphics::rectangle;
 use lockwars::{
     Cooldown, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
-    GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Player, PlayerData, Players,
+    GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Placement, PlacementSettings,
+    Player, PlayerData, Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{
@@ -30,37 +31,39 @@ fn main() -> Result<()> {
 
     let mut gl = GlGraphics::new(opengl);
 
+    let get_placement = |index| match index {
+        0 => Some(Placement {
+            object: Object {
+                kind: ObjectKind::Key {
+                    generation: 10,
+                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                },
+                health: 100,
+                max_health: 100,
+            },
+            cost: 20,
+        }),
+        1 => Some(Placement {
+            object: Object {
+                kind: ObjectKind::Fire {
+                    damage: 20,
+                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                },
+                health: 100,
+                max_health: 100,
+            },
+            cost: 40,
+        }),
+        _ => None,
+    };
     let game_settings = GameSettings {
         n_columns: 6,
         n_rows: 7,
         base_span: 2..5,
         max_keys: 1000,
-        object_count: 2,
-        objects: Box::new(|index| match index {
-            0 => Some((
-                Object {
-                    kind: ObjectKind::Key {
-                        generation: 10,
-                        cooldown: Cooldown::new(Duration::from_secs(1)),
-                    },
-                    health: 100,
-                    max_health: 100,
-                },
-                20,
-            )),
-            1 => Some((
-                Object {
-                    kind: ObjectKind::Fire {
-                        damage: 20,
-                        cooldown: Cooldown::new(Duration::from_secs(1)),
-                    },
-                    health: 100,
-                    max_health: 100,
-                },
-                40,
-            )),
-            _ => None,
-        }),
+        placement: PlacementSettings {
+            get_placement: Box::new(get_placement),
+        },
     };
     let players = Players {
         left: PlayerData { keys: 200 },

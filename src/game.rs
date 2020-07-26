@@ -52,7 +52,8 @@ impl Game {
     ///
     /// The player's keys are deducted accordingly.
     /// Returns `true` if the placement is successful,
-    /// or `false` if the player does not have enough keys.
+    /// or `false` if the players does not have enough keys
+    /// or if the index is invalid.
     pub fn place_object(
         &mut self,
         player: Player,
@@ -66,7 +67,10 @@ impl Game {
             .ok_or_else(|| anyhow!("invalid position"))?;
 
         let settings = &self.settings;
-        let (object, cost) = settings.get_object(index).context("invalid index")?;
+        let Placement { object, cost } = match settings.get_placement(index) {
+            None => return Ok(false),
+            Some(placement) => placement,
+        };
 
         *keys = match keys.checked_sub(cost) {
             None => return Ok(false),
@@ -147,6 +151,7 @@ impl Game {
 }
 
 /// The game settings.
+#[derive(Debug)]
 pub struct GameSettings {
     /// The number of columns on each player's side.
     ///
@@ -162,37 +167,55 @@ pub struct GameSettings {
     /// The maximum amount of keys each player can have.
     pub max_keys: u32,
 
-    /// The number of objects that can be placed in the game.
-    pub object_count: usize,
-
-    /// The objects that can be placed in the game,
-    /// and their costs.
-    ///
-    /// Each object is assigned an index in `0..object_count`.
-    /// Calling `objects` with an index
-    /// returns the object with the corresponding index,
-    /// along with its cost.
-    pub objects: Box<dyn Fn(usize) -> Option<(Object, u32)>>,
+    /// Placement settings.
+    pub placement: PlacementSettings,
 }
 
 impl GameSettings {
-    /// Returns the object with the corresponding index and its cost.
-    pub fn get_object(&self, index: usize) -> Option<(Object, u32)> {
-        (self.objects)(index)
+    /// Given an index,
+    /// returns the corresponding placement.
+    pub fn get_placement(&self, index: usize) -> Option<Placement> {
+        self.placement.get_placement(index)
     }
 }
 
-impl fmt::Debug for GameSettings {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        // skip individual objects
-        f.debug_struct("GameSettings")
-            .field("n_columns", &self.n_columns)
-            .field("n_rows", &self.n_rows)
-            .field("base_span", &self.base_span)
-            .field("max_keys", &self.max_keys)
-            .field("object_count", &self.n_columns)
-            .finish()
+/// Placement settings.
+pub struct PlacementSettings {
+    /// Given an index,
+    /// returns the corresponding placement.
+    pub get_placement: Box<dyn Fn(usize) -> Option<Placement>>,
+}
+
+impl PlacementSettings {
+    /// Given an index,
+    /// returns the corresponding placement.
+    pub fn get_placement(&self, index: usize) -> Option<Placement> {
+        (self.get_placement)(index)
     }
+}
+
+impl fmt::Debug for PlacementSettings {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut f = f.debug_list();
+        for index in 0.. {
+            match self.get_placement(index) {
+                None => break,
+                Some(object) => {
+                    f.entry(&object);
+                }
+            }
+        }
+        f.finish()
+    }
+}
+
+#[derive(Debug)]
+/// Placement data.
+pub struct Placement {
+    /// The object being placed.
+    pub object: Object,
+    /// The cost of the placement.
+    pub cost: u32,
 }
 
 /// Builds a game.
