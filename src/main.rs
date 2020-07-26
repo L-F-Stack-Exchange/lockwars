@@ -40,6 +40,7 @@ fn main() -> Result<()> {
             0 => Some((
                 Object {
                     kind: ObjectKind::Key {
+                        generation: 10,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
                     health: 100,
@@ -60,7 +61,6 @@ fn main() -> Result<()> {
             )),
             _ => None,
         }),
-        key_generation: 10,
     };
     let players = Players {
         left: PlayerData { keys: 200 },
@@ -73,6 +73,7 @@ fn main() -> Result<()> {
                 OwnedObject {
                     object: Object {
                         kind: ObjectKind::Key {
+                            generation: 10,
                             cooldown: Cooldown::new(Duration::from_secs(1)),
                         },
                         health: u32::MAX,
@@ -86,6 +87,7 @@ fn main() -> Result<()> {
                 OwnedObject {
                     object: Object {
                         kind: ObjectKind::Key {
+                            generation: 10,
                             cooldown: Cooldown::new(Duration::from_secs(1)),
                         },
                         health: u32::MAX,
