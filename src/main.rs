@@ -35,24 +35,31 @@ fn main() -> Result<()> {
         n_rows: 7,
         base_span: 2..5,
         max_keys: 1000,
-        objects: vec![
-            Object {
-                kind: ObjectKind::Key {
-                    cooldown: Cooldown::new(Duration::from_secs(1)),
+        object_count: 2,
+        objects: Box::new(|index| match index {
+            0 => Some((
+                Object {
+                    kind: ObjectKind::Key {
+                        cooldown: Cooldown::new(Duration::from_secs(1)),
+                    },
+                    health: 100,
+                    max_health: 100,
                 },
-                health: 100,
-                max_health: 100,
-            },
-            Object {
-                kind: ObjectKind::Fire {
-                    damage: 20,
-                    cooldown: Cooldown::new(Duration::from_secs(1)),
+                20,
+            )),
+            1 => Some((
+                Object {
+                    kind: ObjectKind::Fire {
+                        damage: 20,
+                        cooldown: Cooldown::new(Duration::from_secs(1)),
+                    },
+                    health: 100,
+                    max_health: 100,
                 },
-                health: 100,
-                max_health: 100,
-            },
-        ],
-        costs: vec![20, 40],
+                40,
+            )),
+            _ => None,
+        }),
         key_generation: 10,
     };
     let players = Players {

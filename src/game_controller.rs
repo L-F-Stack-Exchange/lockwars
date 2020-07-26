@@ -6,7 +6,7 @@ use piston::{Button, ButtonArgs, ButtonState, UpdateArgs};
 use std::borrow::Borrow;
 
 /// A game controller that handles input events.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct GameController {
     settings: GameControllerSettings,
     game: Game,
@@ -65,7 +65,7 @@ impl GameController {
             }
 
             if let Some(index) = find(&key_binding.place, &args.button) {
-                if index >= game.settings().objects.len() {
+                if index >= game.settings().object_count {
                     continue;
                 }
                 game.place_object(player, selected_cell, index)?;
