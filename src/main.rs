@@ -1,10 +1,10 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use glutin_window::GlutinWindow;
 use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
 use lockwars::{
-    Cooldown, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
+    Cooldown, Game, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
     GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Placement, Player, PlayerData,
     Players,
 };
@@ -20,126 +20,12 @@ const WINDOW_SIZE: (u32, u32) = (1280, 720);
 fn main() -> Result<()> {
     let opengl = OpenGL::V3_2;
 
-    let window_settings = WindowSettings::new(WINDOW_TITLE, WINDOW_SIZE)
-        .graphics_api(opengl)
-        .exit_on_esc(true)
-        .resizable(true)
-        .decorated(true);
-    #[rustfmt::skip]
-    let mut window = GlutinWindow::new(&window_settings)
-        .map_err(|_| anyhow!("cannot create window"))?;
-
+    let mut window = create_window(opengl)?;
     let mut gl = GlGraphics::new(opengl);
 
-    let game_settings = GameSettings {
-        n_columns: 6,
-        n_rows: 7,
-        base_span: 2..5,
-        max_keys: 1000,
-    };
-    let players = Players {
-        left: player_data(),
-        right: player_data(),
-    };
-    let game = (|| -> Result<_> {
-        GameBuilder::new(game_settings)?
-            .object(
-                (3, 0),
-                OwnedObject {
-                    object: Object {
-                        kind: ObjectKind::Key {
-                            generation: 10,
-                            cooldown: Cooldown::new(Duration::from_secs(1)),
-                        },
-                        health: u32::MAX,
-                        max_health: u32::MAX,
-                    },
-                    owner: Player::Left,
-                },
-            )?
-            .object(
-                (3, 11),
-                OwnedObject {
-                    object: Object {
-                        kind: ObjectKind::Key {
-                            generation: 10,
-                            cooldown: Cooldown::new(Duration::from_secs(1)),
-                        },
-                        health: u32::MAX,
-                        max_health: u32::MAX,
-                    },
-                    owner: Player::Right,
-                },
-            )?
-            .players(players)
-            .finish()
-    })()
-    .context("cannot create game")?;
-
-    let game_view_settings = GameViewSettings {
-        background_color: BLACK,
-        game_area_percentage: 0.8,
-        game_area_border: rectangle::Border {
-            color: WHITE,
-            radius: 1.0,
-        },
-        division_line: line::Line::new(WHITE, 1.0),
-        cell_separator: line::Line::new([0.5, 0.5, 0.5, 1.0], 1.0),
-        base_border: rectangle::Border {
-            color: WHITE,
-            radius: 1.0,
-        },
-        object_percentage: 0.6,
-        object_outline_color: [0.8, 0.4, 0.4, 1.0],
-        object_outline_radius: 1.0,
-        selected_cell_color: [0.0, 0.2, 0.0, 1.0],
-        key_bar_border: rectangle::Border {
-            color: WHITE,
-            radius: 1.0,
-        },
-        key_bar_division_line: line::Line::new(WHITE, 1.0),
-        key_bar_color: WHITE,
-        health_bar_height_percentage: 0.7,
-        health_bar_width_percentage: 0.04,
-        health_bar_background: [0.4, 0.2, 0.2, 1.0],
-        health_bar_color: [0.8, 0.4, 0.4, 1.0],
-    };
-    let game_view = GameView::new(game_view_settings).context("cannot create game view")?;
-
-    let game_controller_settings = GameControllerSettings {
-        key_binding: Players {
-            left: KeyBinding {
-                up: Button::Keyboard(Key::W),
-                down: Button::Keyboard(Key::S),
-                left: Button::Keyboard(Key::A),
-                right: Button::Keyboard(Key::D),
-                remove: Button::Keyboard(Key::G),
-                place: [Key::T, Key::Y, Key::U]
-                    .iter()
-                    .copied()
-                    .map(Button::Keyboard)
-                    .collect(),
-            },
-            right: KeyBinding {
-                up: Button::Keyboard(Key::Up),
-                down: Button::Keyboard(Key::Down),
-                left: Button::Keyboard(Key::Left),
-                right: Button::Keyboard(Key::Right),
-                remove: Button::Keyboard(Key::NumPad0),
-                place: [Key::NumPad1, Key::NumPad2, Key::NumPad3]
-                    .iter()
-                    .copied()
-                    .map(Button::Keyboard)
-                    .collect(),
-            },
-        },
-        selected_cells: Players {
-            left: (3, 0),
-            right: (3, 11),
-        },
-    };
-    let mut game_controller = GameController::new(game_controller_settings, game)
-        .context("cannot create game controller")?;
+    let game = create_game()?;
+    let mut game_controller = create_game_controller(game)?;
+    let game_view = create_game_view()?;
 
     let event_settings = EventSettings::new();
     let mut events = Events::new(event_settings);
@@ -159,6 +45,60 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn create_window(opengl: OpenGL) -> Result<GlutinWindow> {
+    let window_settings = WindowSettings::new(WINDOW_TITLE, WINDOW_SIZE)
+        .graphics_api(opengl)
+        .exit_on_esc(true)
+        .resizable(true)
+        .decorated(true);
+    GlutinWindow::new(&window_settings).map_err(|_| anyhow!("cannot create window"))
+}
+
+fn create_game() -> Result<Game> {
+    let game_settings = GameSettings {
+        n_columns: 6,
+        n_rows: 7,
+        base_span: 2..5,
+        max_keys: 1000,
+    };
+    let players = Players {
+        left: player_data(),
+        right: player_data(),
+    };
+
+    GameBuilder::new(game_settings)?
+        .object(
+            (3, 0),
+            OwnedObject {
+                object: Object {
+                    kind: ObjectKind::Key {
+                        generation: 10,
+                        cooldown: Cooldown::new(Duration::from_secs(1)),
+                    },
+                    health: u32::MAX,
+                    max_health: u32::MAX,
+                },
+                owner: Player::Left,
+            },
+        )?
+        .object(
+            (3, 11),
+            OwnedObject {
+                object: Object {
+                    kind: ObjectKind::Key {
+                        generation: 10,
+                        cooldown: Cooldown::new(Duration::from_secs(1)),
+                    },
+                    health: u32::MAX,
+                    max_health: u32::MAX,
+                },
+                owner: Player::Right,
+            },
+        )?
+        .players(players)
+        .finish()
 }
 
 fn player_data() -> PlayerData {
@@ -200,4 +140,74 @@ fn player_data() -> PlayerData {
             },
         ],
     }
+}
+
+fn create_game_controller(game: Game) -> Result<GameController> {
+    let game_controller_settings = GameControllerSettings {
+        key_binding: Players {
+            left: KeyBinding {
+                up: Button::Keyboard(Key::W),
+                down: Button::Keyboard(Key::S),
+                left: Button::Keyboard(Key::A),
+                right: Button::Keyboard(Key::D),
+                remove: Button::Keyboard(Key::G),
+                place: [Key::T, Key::Y, Key::U]
+                    .iter()
+                    .copied()
+                    .map(Button::Keyboard)
+                    .collect(),
+            },
+            right: KeyBinding {
+                up: Button::Keyboard(Key::Up),
+                down: Button::Keyboard(Key::Down),
+                left: Button::Keyboard(Key::Left),
+                right: Button::Keyboard(Key::Right),
+                remove: Button::Keyboard(Key::NumPad0),
+                place: [Key::NumPad1, Key::NumPad2, Key::NumPad3]
+                    .iter()
+                    .copied()
+                    .map(Button::Keyboard)
+                    .collect(),
+            },
+        },
+        selected_cells: Players {
+            left: (3, 0),
+            right: (3, 11),
+        },
+    };
+
+    GameController::new(game_controller_settings, game)
+}
+
+fn create_game_view() -> Result<GameView> {
+    let game_view_settings = GameViewSettings {
+        background_color: BLACK,
+        game_area_percentage: 0.8,
+        game_area_border: rectangle::Border {
+            color: WHITE,
+            radius: 1.0,
+        },
+        division_line: line::Line::new(WHITE, 1.0),
+        cell_separator: line::Line::new([0.5, 0.5, 0.5, 1.0], 1.0),
+        base_border: rectangle::Border {
+            color: WHITE,
+            radius: 1.0,
+        },
+        object_percentage: 0.6,
+        object_outline_color: [0.8, 0.4, 0.4, 1.0],
+        object_outline_radius: 1.0,
+        selected_cell_color: [0.0, 0.2, 0.0, 1.0],
+        key_bar_border: rectangle::Border {
+            color: WHITE,
+            radius: 1.0,
+        },
+        key_bar_division_line: line::Line::new(WHITE, 1.0),
+        key_bar_color: WHITE,
+        health_bar_height_percentage: 0.7,
+        health_bar_width_percentage: 0.04,
+        health_bar_background: [0.4, 0.2, 0.2, 1.0],
+        health_bar_color: [0.8, 0.4, 0.4, 1.0],
+    };
+
+    GameView::new(game_view_settings)
 }
