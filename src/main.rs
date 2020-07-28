@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use anyhow::{anyhow, Result};
 use glutin_window::GlutinWindow;
 use graphics::color::{BLACK, WHITE};

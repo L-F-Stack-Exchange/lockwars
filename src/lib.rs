@@ -1,5 +1,4 @@
 #![warn(missing_docs)]
-#![warn(clippy::cargo)]
 #![warn(clippy::pedantic)]
 
 //! A simple battle game.
