@@ -25,17 +25,8 @@ impl Cooldown {
         self.instant = Instant::now();
     }
 
-    /// Executes the given callback and resets the token
-    /// if the cooldown is over.
-    pub fn execute<F, T>(&mut self, f: F) -> Option<T>
-    where
-        F: FnOnce() -> T,
-    {
-        if self.instant.elapsed() >= self.duration {
-            self.reset();
-            Some(f())
-        } else {
-            None
-        }
+    /// Returns true if the cooldown is over.
+    pub fn is_over(&self) -> bool {
+        self.instant.elapsed() >= self.duration
     }
 }
