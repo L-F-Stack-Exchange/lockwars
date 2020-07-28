@@ -108,10 +108,9 @@ impl GameController {
         let relative_column = column - offset;
 
         self.selected_cells[player] = (
-            (isize::try_from(row)?.add(delta.0))
-                .rem_euclid(n_rows)
-                .try_into()?,
-            (isize::try_from(relative_column)?.add(delta.1))
+            row.add(delta.0).rem_euclid(n_rows).try_into()?,
+            relative_column
+                .add(delta.1)
                 .rem_euclid(n_columns)
                 .add(offset)
                 .try_into()?,
