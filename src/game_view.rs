@@ -2,11 +2,7 @@
 
 use crate::{GameController, Object, ObjectKind, Player};
 use anyhow::{anyhow, Context as AnyhowContext, Result};
-use graphics::line;
-use graphics::math::Vec2d;
-use graphics::rectangle;
-use graphics::types::Color;
-use graphics::{Context, Graphics};
+use graphics::{line, math::Vec2d, rectangle, types::Color, Context, Graphics};
 
 /// The game view.
 pub struct GameView {
@@ -253,7 +249,7 @@ impl GameView {
     where
         G: Graphics,
     {
-        use graphics::ellipse::Ellipse;
+        use graphics::ellipse;
 
         // calculate layout
         let settings = &self.settings;
@@ -293,11 +289,19 @@ impl GameView {
             }
             ObjectKind::Fire { .. } => {
                 // draw circle
-                let circle = Ellipse::new_border(
+                let circle = ellipse::Ellipse::new_border(
                     settings.object_outline_color,
                     settings.object_outline_radius,
                 );
                 circle.draw(object_area, &context.draw_state, context.transform, g);
+            }
+            ObjectKind::Barrier { .. } => {
+                // draw square
+                let rectangle = rectangle::Rectangle::new_border(
+                    settings.object_outline_color,
+                    settings.object_outline_radius,
+                );
+                rectangle.draw(object_area, &context.draw_state, context.transform, g);
             }
         }
 

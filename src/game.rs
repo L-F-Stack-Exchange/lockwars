@@ -117,6 +117,7 @@ impl Game {
                         }
                     });
                 }
+                ObjectKind::Barrier {} => {}
             }
         }
 

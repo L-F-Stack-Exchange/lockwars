@@ -54,6 +54,14 @@ fn main() -> Result<()> {
             },
             cost: 40,
         }),
+        2 => Some(Placement {
+            object: Object {
+                kind: ObjectKind::Barrier {},
+                health: 3600,
+                max_health: 3600,
+            },
+            cost: 20,
+        }),
         _ => None,
     };
     let game_settings = GameSettings {
