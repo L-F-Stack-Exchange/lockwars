@@ -4,11 +4,10 @@
 //!
 //! The division line separates the two players' territories.
 
-use crate::{Object, ObjectKind, OwnedObject, Player, PlayerData, Players};
+use crate::{ObjectKind, OwnedObject, Player, PlayerData, Players};
 use anyhow::{anyhow, Context, Result};
 use ndarray::prelude::*;
 use std::cell::RefCell;
-use std::fmt;
 use std::ops::Range;
 
 /// The game state.
@@ -60,25 +59,32 @@ impl Game {
         position: (usize, usize),
         index: usize,
     ) -> Result<bool> {
-        let keys = &mut self.players[player].keys;
+        let player_data = &mut self.players[player];
+
         let cell = self
             .cells
             .get_mut(position)
             .ok_or_else(|| anyhow!("invalid position"))?;
 
-        let settings = &self.settings;
-        let Placement { object, cost } = match settings.get_placement(index) {
+        let placement = match player_data.placements.get_mut(index) {
             None => return Ok(false),
             Some(placement) => placement,
         };
 
-        *keys = match keys.checked_sub(cost) {
+        let cooldown = &mut placement.cooldown;
+        if !cooldown.is_over() {
+            return Ok(false);
+        }
+        cooldown.reset();
+
+        let keys = &mut player_data.keys;
+        *keys = match keys.checked_sub(placement.cost) {
             None => return Ok(false),
             Some(remaining_keys) => remaining_keys,
         };
 
         cell.borrow_mut().object = Some(OwnedObject {
-            object: object,
+            object: placement.generate_object(),
             owner: player,
         });
         Ok(true)
@@ -102,20 +108,24 @@ impl Game {
                     ref mut cooldown,
                 } => {
                     let players = &mut self.players;
-                    cooldown.execute(|| {
+                    if cooldown.is_over() {
+                        cooldown.reset();
+
                         let keys = &mut players[owner].keys;
                         *keys = keys.saturating_add(generation).min(settings.max_keys);
-                    });
+                    }
                 }
                 ObjectKind::Fire {
                     damage,
                     ref mut cooldown,
                 } => {
-                    cooldown.execute(|| {
+                    if cooldown.is_over() {
+                        cooldown.reset();
+
                         if let Some(target) = self.find_target(row, owner.toggle()) {
                             target.borrow_mut().receive_damage(damage);
                         }
-                    });
+                    }
                 }
                 ObjectKind::Barrier {} => {}
             }
@@ -167,56 +177,6 @@ pub struct GameSettings {
 
     /// The maximum amount of keys each player can have.
     pub max_keys: u32,
-
-    /// Placement settings.
-    pub placement: PlacementSettings,
-}
-
-impl GameSettings {
-    /// Given an index,
-    /// returns the corresponding placement.
-    pub fn get_placement(&self, index: usize) -> Option<Placement> {
-        self.placement.get_placement(index)
-    }
-}
-
-/// Placement settings.
-pub struct PlacementSettings {
-    /// Given an index,
-    /// returns the corresponding placement.
-    pub get_placement: Box<dyn Fn(usize) -> Option<Placement>>,
-}
-
-impl PlacementSettings {
-    /// Given an index,
-    /// returns the corresponding placement.
-    pub fn get_placement(&self, index: usize) -> Option<Placement> {
-        (self.get_placement)(index)
-    }
-}
-
-impl fmt::Debug for PlacementSettings {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut f = f.debug_list();
-        for index in 0.. {
-            match self.get_placement(index) {
-                None => break,
-                Some(object) => {
-                    f.entry(&object);
-                }
-            }
-        }
-        f.finish()
-    }
-}
-
-#[derive(Debug)]
-/// Placement data.
-pub struct Placement {
-    /// The object being placed.
-    pub object: Object,
-    /// The cost of the placement.
-    pub cost: u32,
 }
 
 /// Builds a game.

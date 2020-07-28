@@ -5,8 +5,8 @@ use graphics::line;
 use graphics::rectangle;
 use lockwars::{
     Cooldown, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
-    GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Placement, PlacementSettings,
-    Player, PlayerData, Players,
+    GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Placement, Player, PlayerData,
+    Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{
@@ -31,51 +31,15 @@ fn main() -> Result<()> {
 
     let mut gl = GlGraphics::new(opengl);
 
-    let get_placement = |index| match index {
-        0 => Some(Placement {
-            object: Object {
-                kind: ObjectKind::Key {
-                    generation: 10,
-                    cooldown: Cooldown::new(Duration::from_secs(1)),
-                },
-                health: 100,
-                max_health: 100,
-            },
-            cost: 20,
-        }),
-        1 => Some(Placement {
-            object: Object {
-                kind: ObjectKind::Fire {
-                    damage: 20,
-                    cooldown: Cooldown::new(Duration::from_secs(1)),
-                },
-                health: 100,
-                max_health: 100,
-            },
-            cost: 40,
-        }),
-        2 => Some(Placement {
-            object: Object {
-                kind: ObjectKind::Barrier {},
-                health: 3600,
-                max_health: 3600,
-            },
-            cost: 20,
-        }),
-        _ => None,
-    };
     let game_settings = GameSettings {
         n_columns: 6,
         n_rows: 7,
         base_span: 2..5,
         max_keys: 1000,
-        placement: PlacementSettings {
-            get_placement: Box::new(get_placement),
-        },
     };
     let players = Players {
-        left: PlayerData { keys: 200 },
-        right: PlayerData { keys: 200 },
+        left: player_data(),
+        right: player_data(),
     };
     let game = (|| -> Result<_> {
         GameBuilder::new(game_settings)?
@@ -195,4 +159,45 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn player_data() -> PlayerData {
+    PlayerData {
+        keys: 200,
+        placements: vec![
+            Placement {
+                cooldown: Cooldown::new(Duration::from_secs(1)),
+                cost: 20,
+                generate_object: Box::new(|| Object {
+                    kind: ObjectKind::Key {
+                        generation: 10,
+                        cooldown: Cooldown::new(Duration::from_secs(1)),
+                    },
+                    health: 100,
+                    max_health: 100,
+                }),
+            },
+            Placement {
+                cooldown: Cooldown::new(Duration::from_secs(1)),
+                cost: 40,
+                generate_object: Box::new(|| Object {
+                    kind: ObjectKind::Fire {
+                        damage: 20,
+                        cooldown: Cooldown::new(Duration::from_secs(1)),
+                    },
+                    health: 100,
+                    max_health: 100,
+                }),
+            },
+            Placement {
+                cooldown: Cooldown::new(Duration::from_secs(1)),
+                cost: 20,
+                generate_object: Box::new(|| Object {
+                    kind: ObjectKind::Barrier {},
+                    health: 3600,
+                    max_health: 3600,
+                }),
+            },
+        ],
+    }
 }
