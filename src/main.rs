@@ -35,7 +35,6 @@ fn main() -> Result<()> {
         n_rows: 7,
         base_span: 2..5,
         max_keys: 1000,
-        object_count: 2,
         objects: Box::new(|index| match index {
             0 => Some((
                 Object {
@@ -58,6 +57,14 @@ fn main() -> Result<()> {
                     max_health: 100,
                 },
                 40,
+            )),
+            2 => Some((
+                Object {
+                    kind: ObjectKind::Barrier {},
+                    health: 3600,
+                    max_health: 3600,
+                },
+                20,
             )),
             _ => None,
         }),

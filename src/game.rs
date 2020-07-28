@@ -113,6 +113,7 @@ impl Game {
                         }
                     });
                 }
+                ObjectKind::Barrier {} => {}
             }
         }
 
@@ -161,9 +162,6 @@ pub struct GameSettings {
 
     /// The maximum amount of keys each player can have.
     pub max_keys: u32,
-
-    /// The number of objects that can be placed in the game.
-    pub object_count: usize,
 
     /// The objects that can be placed in the game,
     /// and their costs.

@@ -36,6 +36,8 @@ pub enum ObjectKind {
         /// The cooldown for attack.
         cooldown: Cooldown,
     },
+    /// A barrier object.
+    Barrier {},
 }
 
 /// An object owned by a player.
