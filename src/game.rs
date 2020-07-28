@@ -4,18 +4,19 @@
 //!
 //! The division line separates the two players' territories.
 
-use crate::{Object, ObjectKind, Player, PlayerData, Players};
+use crate::{ObjectKind, OwnedObject, Player, PlayerData, Players};
 use anyhow::{anyhow, Context, Result};
 use ndarray::prelude::*;
+use std::cell::RefCell;
 use std::ops::Range;
 
 /// The game state.
 ///
 /// Use the [`GameBuilder`] API to build a game.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Game {
     settings: GameSettings,
-    cells: Array2<Cell>,
+    cells: Array2<RefCell<Cell>>,
     players: Players<PlayerData>,
 }
 
@@ -26,7 +27,7 @@ impl Game {
     }
 
     /// Returns the cells.
-    pub fn cells(&self) -> ArrayView2<Cell> {
+    pub fn cells(&self) -> ArrayView2<RefCell<Cell>> {
         self.cells.view()
     }
 
@@ -39,9 +40,9 @@ impl Game {
     pub fn clear_cell(&mut self, _player: Player, position: (usize, usize)) -> Result<()> {
         let cell = self
             .cells
-            .get_mut(position)
+            .get(position)
             .ok_or_else(|| anyhow!("invalid position"))?;
-        cell.object = None;
+        cell.borrow_mut().object = None;
         Ok(())
     }
 
@@ -50,71 +51,118 @@ impl Game {
     ///
     /// The player's keys are deducted accordingly.
     /// Returns `true` if the placement is successful,
-    /// or `false` if the player does not have enough keys.
+    /// or `false` if the players does not have enough keys
+    /// or if the index is invalid.
     pub fn place_object(
         &mut self,
         player: Player,
         position: (usize, usize),
         index: usize,
     ) -> Result<bool> {
-        let keys = &mut self.players[player].keys;
+        let player_data = &mut self.players[player];
+
         let cell = self
             .cells
             .get_mut(position)
             .ok_or_else(|| anyhow!("invalid position"))?;
 
-        let settings = &self.settings;
-        let cost = *settings.costs.get(index).context("invalid index")?;
+        let placement = match player_data.placements.get_mut(index) {
+            None => return Ok(false),
+            Some(placement) => placement,
+        };
 
-        *keys = match keys.checked_sub(cost) {
+        let cooldown = &mut placement.cooldown;
+        if !cooldown.is_over() {
+            return Ok(false);
+        }
+        cooldown.reset();
+
+        let keys = &mut player_data.keys;
+        *keys = match keys.checked_sub(placement.cost) {
             None => return Ok(false),
             Some(remaining_keys) => remaining_keys,
         };
 
-        cell.object = Some(
-            settings.new_object(
-                settings
-                    .object_kinds
-                    .get(index)
-                    .context("invalid index")?
-                    .clone(),
-                player,
-            ),
-        );
+        cell.borrow_mut().object = Some(OwnedObject {
+            object: placement.generate_object(),
+            owner: player,
+        });
         Ok(true)
     }
 
     /// Updates the state of the game.
     pub fn update(&mut self) -> Result<()> {
         let settings = &self.settings;
-        let players = &mut self.players;
 
-        for (_position, cell) in self.cells.indexed_iter_mut() {
+        for ((row, _column), cell) in self.cells.indexed_iter() {
+            let mut cell = cell.borrow_mut();
             let object = match &mut cell.object {
                 None => continue,
                 Some(object) => object,
             };
             let owner = object.owner;
 
-            match object.kind {
-                ObjectKind::Key { ref mut cooldown } => {
-                    cooldown.execute(|| {
+            match object.object.kind {
+                ObjectKind::Key {
+                    generation,
+                    ref mut cooldown,
+                } => {
+                    let players = &mut self.players;
+                    if cooldown.is_over() {
+                        cooldown.reset();
+
                         let keys = &mut players[owner].keys;
-                        *keys = keys
-                            .saturating_add(settings.key_generation)
-                            .min(settings.max_keys);
-                    });
+                        *keys = keys.saturating_add(generation).min(settings.max_keys);
+                    }
                 }
-                ObjectKind::Fire => {}
+                ObjectKind::Fire {
+                    damage,
+                    ref mut cooldown,
+                } => {
+                    if cooldown.is_over() {
+                        cooldown.reset();
+
+                        if let Some(target) = self.find_target(row, owner.toggle()) {
+                            target.borrow_mut().receive_damage(damage);
+                        }
+                    }
+                }
+                ObjectKind::Barrier {} => {}
             }
         }
 
         Ok(())
     }
+
+    /// Find a target on the specified row.
+    ///
+    /// `player` specifies the targeted player.
+    fn find_target(&self, row: usize, player: Player) -> Option<&RefCell<Cell>> {
+        fn find_in<I>(game: &Game, row: usize, column_range: I) -> Option<&RefCell<Cell>>
+        where
+            I: Iterator<Item = usize>,
+        {
+            for column in column_range {
+                let cell = &game.cells[(row, column)];
+                if cell.borrow().object.is_some() {
+                    return Some(cell);
+                }
+            }
+            None
+        }
+
+        let n_columns = self.settings.n_columns;
+        let n_total_columns = 2 * n_columns;
+
+        match player {
+            Player::Left => find_in(self, row, (0..n_columns).rev()),
+            Player::Right => find_in(self, row, n_columns..n_total_columns),
+        }
+    }
 }
 
 /// The game settings.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct GameSettings {
     /// The number of columns on each player's side.
     ///
@@ -129,33 +177,13 @@ pub struct GameSettings {
 
     /// The maximum amount of keys each player can have.
     pub max_keys: u32,
-
-    /// The kinds of objects that can be placed in the game.
-    ///
-    /// Each kind of object is assigned an index,
-    /// which is equal to its position in `object_kinds`.
-    pub object_kinds: Vec<ObjectKind>,
-
-    /// The costs of placing objects,
-    /// following the index of objects.
-    pub costs: Vec<u32>,
-
-    /// The amount of keys generated by key objects.
-    pub key_generation: u32,
-}
-
-impl GameSettings {
-    /// Creates an object using the game settings.
-    pub fn new_object(&self, kind: ObjectKind, owner: Player) -> Object {
-        Object { kind, owner }
-    }
 }
 
 /// Builds a game.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct GameBuilder {
     settings: GameSettings,
-    cells: Array2<Cell>,
+    cells: Array2<RefCell<Cell>>,
     players: Option<Players<PlayerData>>,
 }
 
@@ -176,21 +204,18 @@ impl GameBuilder {
 
             Ok(Self {
                 settings,
-                cells: Array2::from_shape_simple_fn((n_rows, n_total_columns), Cell::empty),
+                cells: Array2::from_shape_simple_fn((n_rows, n_total_columns), || {
+                    RefCell::new(Cell::empty())
+                }),
                 players: None,
             })
         }
     }
 
     /// Presets an object.
-    pub fn object(
-        mut self,
-        index: (usize, usize),
-        kind: ObjectKind,
-        player: Player,
-    ) -> Result<Self> {
-        let mut cell = self.cells.get_mut(index).context("cannot preset object")?;
-        cell.object = Some(self.settings.new_object(kind, player));
+    pub fn object(mut self, index: (usize, usize), owned_object: OwnedObject) -> Result<Self> {
+        let cell = self.cells.get_mut(index).context("cannot preset object")?;
+        cell.borrow_mut().object = Some(owned_object);
         Ok(self)
     }
 
@@ -216,12 +241,29 @@ impl GameBuilder {
 #[derive(Clone, Debug)]
 pub struct Cell {
     /// The optional object placed in the cell.
-    pub object: Option<Object>,
+    pub object: Option<OwnedObject>,
 }
 
 impl Cell {
     /// Returns an empty cell.
     pub fn empty() -> Self {
         Self { object: None }
+    }
+
+    /// Receives the specified amount of damage,
+    /// if an object is present.
+    ///
+    /// The object is removed if its health runs out.
+    pub fn receive_damage(&mut self, damage: u32) {
+        let object = match &mut self.object {
+            None => return,
+            Some(object) => &mut object.object,
+        };
+
+        if object.health > damage {
+            object.health -= damage;
+        } else {
+            self.object = None;
+        }
     }
 }

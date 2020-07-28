@@ -16,5 +16,5 @@ pub use cooldown::Cooldown;
 pub use game::{Cell, Game, GameBuilder, GameSettings};
 pub use game_controller::{GameController, GameControllerSettings, KeyBinding};
 pub use game_view::{GameView, GameViewSettings};
-pub use object::{Object, ObjectKind};
-pub use player::{Player, PlayerData, Players};
+pub use object::{Object, ObjectKind, OwnedObject};
+pub use player::{Placement, Player, PlayerData, Players};

@@ -6,7 +6,7 @@ use piston::{Button, ButtonArgs, ButtonState, UpdateArgs};
 use std::borrow::Borrow;
 
 /// A game controller that handles input events.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct GameController {
     settings: GameControllerSettings,
     game: Game,
@@ -65,9 +65,6 @@ impl GameController {
             }
 
             if let Some(index) = find(&key_binding.place, &args.button) {
-                if index >= game.settings().object_kinds.len() {
-                    continue;
-                }
                 game.place_object(player, selected_cell, index)?;
             }
 
@@ -111,10 +108,9 @@ impl GameController {
         let relative_column = column - offset;
 
         self.selected_cells[player] = (
-            (isize::try_from(row)?.add(delta.0))
-                .rem_euclid(n_rows)
-                .try_into()?,
-            (isize::try_from(relative_column)?.add(delta.1))
+            row.add(delta.0).rem_euclid(n_rows).try_into()?,
+            relative_column
+                .add(delta.1)
                 .rem_euclid(n_columns)
                 .add(offset)
                 .try_into()?,
