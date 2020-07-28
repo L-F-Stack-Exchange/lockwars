@@ -4,9 +4,8 @@ use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
 use lockwars::{
-    Cooldown, Game, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
-    GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Placement, Player, PlayerData,
-    Players,
+    game, game_controller, game_view, object, player, Cooldown, Game, GameController, GameView,
+    Object, Player, Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{
@@ -57,7 +56,9 @@ fn create_window(opengl: OpenGL) -> Result<GlutinWindow> {
 }
 
 fn create_game() -> Result<Game> {
-    let game_settings = GameSettings {
+    use object::{Kind, Owned};
+
+    let game_settings = game::Settings {
         n_columns: 6,
         n_rows: 7,
         base_span: 2..5,
@@ -68,12 +69,12 @@ fn create_game() -> Result<Game> {
         right: player_data(),
     };
 
-    GameBuilder::new(game_settings)?
+    game::Builder::new(game_settings)?
         .object(
             (3, 0),
-            OwnedObject {
+            Owned {
                 object: Object {
-                    kind: ObjectKind::Key {
+                    kind: Kind::Key {
                         generation: 10,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
@@ -85,9 +86,9 @@ fn create_game() -> Result<Game> {
         )?
         .object(
             (3, 11),
-            OwnedObject {
+            Owned {
                 object: Object {
-                    kind: ObjectKind::Key {
+                    kind: Kind::Key {
                         generation: 10,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
@@ -101,15 +102,18 @@ fn create_game() -> Result<Game> {
         .finish()
 }
 
-fn player_data() -> PlayerData {
-    PlayerData {
+fn player_data() -> player::Data {
+    use object::Kind;
+    use player::Placement;
+
+    player::Data {
         keys: 200,
         placements: vec![
             Placement {
                 cooldown: Cooldown::new(Duration::from_secs(1)),
                 cost: 20,
                 generate_object: Box::new(|| Object {
-                    kind: ObjectKind::Key {
+                    kind: Kind::Key {
                         generation: 10,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
@@ -121,7 +125,7 @@ fn player_data() -> PlayerData {
                 cooldown: Cooldown::new(Duration::from_secs(1)),
                 cost: 40,
                 generate_object: Box::new(|| Object {
-                    kind: ObjectKind::Fire {
+                    kind: Kind::Fire {
                         damage: 20,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
@@ -133,7 +137,7 @@ fn player_data() -> PlayerData {
                 cooldown: Cooldown::new(Duration::from_secs(1)),
                 cost: 20,
                 generate_object: Box::new(|| Object {
-                    kind: ObjectKind::Barrier {},
+                    kind: Kind::Barrier {},
                     health: 3600,
                     max_health: 3600,
                 }),
@@ -143,7 +147,9 @@ fn player_data() -> PlayerData {
 }
 
 fn create_game_controller(game: Game) -> Result<GameController> {
-    let game_controller_settings = GameControllerSettings {
+    use game_controller::KeyBinding;
+
+    let game_controller_settings = game_controller::Settings {
         key_binding: Players {
             left: KeyBinding {
                 up: Button::Keyboard(Key::W),
@@ -180,7 +186,7 @@ fn create_game_controller(game: Game) -> Result<GameController> {
 }
 
 fn create_game_view() -> Result<GameView> {
-    let game_view_settings = GameViewSettings {
+    let game_view_settings = game_view::Settings {
         background_color: BLACK,
         game_area_percentage: 0.8,
         game_area_border: rectangle::Border {

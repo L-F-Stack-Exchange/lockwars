@@ -4,7 +4,7 @@
 //!
 //! The division line separates the two players' territories.
 
-use crate::{ObjectKind, OwnedObject, Player, PlayerData, Players};
+use crate::{object, player, Player, Players};
 use anyhow::{anyhow, Context, Result};
 use ndarray::prelude::*;
 use std::cell::RefCell;
@@ -12,17 +12,17 @@ use std::ops::Range;
 
 /// The game state.
 ///
-/// Use the [`GameBuilder`] API to build a game.
+/// Use the [`Builder`] API to build a game.
 #[derive(Debug)]
 pub struct Game {
-    settings: GameSettings,
+    settings: Settings,
     cells: Array2<RefCell<Cell>>,
-    players: Players<PlayerData>,
+    players: Players<player::Data>,
 }
 
 impl Game {
     /// Returns the game settings.
-    pub fn settings(&self) -> &GameSettings {
+    pub fn settings(&self) -> &Settings {
         &self.settings
     }
 
@@ -32,7 +32,7 @@ impl Game {
     }
 
     /// Returns the players.
-    pub fn players(&self) -> &Players<PlayerData> {
+    pub fn players(&self) -> &Players<player::Data> {
         &self.players
     }
 
@@ -83,7 +83,7 @@ impl Game {
             Some(remaining_keys) => remaining_keys,
         };
 
-        cell.borrow_mut().object = Some(OwnedObject {
+        cell.borrow_mut().object = Some(object::Owned {
             object: placement.generate_object(),
             owner: player,
         });
@@ -92,6 +92,8 @@ impl Game {
 
     /// Updates the state of the game.
     pub fn update(&mut self) -> Result<()> {
+        use object::Kind;
+
         let settings = &self.settings;
 
         for ((row, _column), cell) in self.cells.indexed_iter() {
@@ -103,7 +105,7 @@ impl Game {
             let owner = object.owner;
 
             match object.object.kind {
-                ObjectKind::Key {
+                Kind::Key {
                     generation,
                     ref mut cooldown,
                 } => {
@@ -115,7 +117,7 @@ impl Game {
                         *keys = keys.saturating_add(generation).min(settings.max_keys);
                     }
                 }
-                ObjectKind::Fire {
+                Kind::Fire {
                     damage,
                     ref mut cooldown,
                 } => {
@@ -127,7 +129,7 @@ impl Game {
                         }
                     }
                 }
-                ObjectKind::Barrier {} => {}
+                Kind::Barrier {} => {}
             }
         }
 
@@ -163,7 +165,7 @@ impl Game {
 
 /// The game settings.
 #[derive(Debug)]
-pub struct GameSettings {
+pub struct Settings {
     /// The number of columns on each player's side.
     ///
     /// The total number of columns is `2 * n_columns`.
@@ -181,15 +183,15 @@ pub struct GameSettings {
 
 /// Builds a game.
 #[derive(Debug)]
-pub struct GameBuilder {
-    settings: GameSettings,
+pub struct Builder {
+    settings: Settings,
     cells: Array2<RefCell<Cell>>,
-    players: Option<Players<PlayerData>>,
+    players: Option<Players<player::Data>>,
 }
 
-impl GameBuilder {
+impl Builder {
     /// Creates a new game builder.
-    pub fn new(settings: GameSettings) -> Result<Self> {
+    pub fn new(settings: Settings) -> Result<Self> {
         if settings.n_columns == 0 {
             Err(anyhow!("game must contain at least one column"))
         } else if settings.n_rows == 0 {
@@ -213,14 +215,14 @@ impl GameBuilder {
     }
 
     /// Presets an object.
-    pub fn object(mut self, index: (usize, usize), owned_object: OwnedObject) -> Result<Self> {
+    pub fn object(mut self, index: (usize, usize), owned_object: object::Owned) -> Result<Self> {
         let cell = self.cells.get_mut(index).context("cannot preset object")?;
         cell.borrow_mut().object = Some(owned_object);
         Ok(self)
     }
 
     /// Sets player data.
-    pub fn players(mut self, players: Players<PlayerData>) -> Self {
+    pub fn players(mut self, players: Players<player::Data>) -> Self {
         self.players = Some(players);
         self
     }
@@ -241,7 +243,7 @@ impl GameBuilder {
 #[derive(Clone, Debug)]
 pub struct Cell {
     /// The optional object placed in the cell.
-    pub object: Option<OwnedObject>,
+    pub object: Option<object::Owned>,
 }
 
 impl Cell {

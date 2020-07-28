@@ -8,14 +8,14 @@ use std::borrow::Borrow;
 /// A game controller that handles input events.
 #[derive(Debug)]
 pub struct GameController {
-    settings: GameControllerSettings,
+    settings: Settings,
     game: Game,
     selected_cells: Players<(usize, usize)>,
 }
 
 impl GameController {
     /// Creates a new game controller.
-    pub fn new(settings: GameControllerSettings, game: Game) -> Result<Self> {
+    pub fn new(settings: Settings, game: Game) -> Result<Self> {
         let selected_cells = settings.selected_cells;
         let n_rows = game.settings().n_rows;
         let n_columns = game.settings().n_columns;
@@ -127,7 +127,7 @@ impl GameController {
 
 /// Game controller settings.
 #[derive(Clone, Debug)]
-pub struct GameControllerSettings {
+pub struct Settings {
     /// The key binding for players.
     pub key_binding: Players<KeyBinding>,
 
