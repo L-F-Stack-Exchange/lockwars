@@ -1,12 +1,15 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::must_use_candidate)]
+
 use anyhow::{anyhow, Result};
 use glutin_window::GlutinWindow;
 use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
 use lockwars::{
-    Cooldown, Game, GameBuilder, GameController, GameControllerSettings, GameSettings, GameView,
-    GameViewSettings, KeyBinding, Object, ObjectKind, OwnedObject, Placement, Player, PlayerData,
-    Players,
+    controller, game, object, player, renderer, Controller, Cooldown, Game, Object, Player,
+    Players, Renderer,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{
@@ -24,23 +27,23 @@ fn main() -> Result<()> {
     let mut gl = GlGraphics::new(opengl);
 
     let game = create_game()?;
-    let mut game_controller = create_game_controller(game)?;
-    let game_view = create_game_view()?;
+    let mut controller = create_controller(game)?;
+    let renderer = create_renderer()?;
 
     let event_settings = EventSettings::new();
     let mut events = Events::new(event_settings);
 
     while let Some(event) = events.next(&mut window) {
         if let Some(args) = event.button_args() {
-            game_controller.button_event(args)?;
+            controller.button_event(args)?;
         }
         if let Some(args) = event.render_args() {
             gl.draw(args.viewport(), |context, g| {
-                game_view.draw(&game_controller, &context, g)
+                renderer.draw(&controller, &context, g)
             })?;
         }
         if let Some(args) = event.update_args() {
-            game_controller.update_event(args)?;
+            controller.update_event(args)?;
         }
     }
 
@@ -57,7 +60,9 @@ fn create_window(opengl: OpenGL) -> Result<GlutinWindow> {
 }
 
 fn create_game() -> Result<Game> {
-    let game_settings = GameSettings {
+    use object::{Kind, Owned};
+
+    let game_settings = game::Settings {
         n_columns: 6,
         n_rows: 7,
         base_span: 2..5,
@@ -68,12 +73,12 @@ fn create_game() -> Result<Game> {
         right: player_data(),
     };
 
-    GameBuilder::new(game_settings)?
+    game::Builder::new(game_settings)?
         .object(
             (3, 0),
-            OwnedObject {
+            Owned {
                 object: Object {
-                    kind: ObjectKind::Key {
+                    kind: Kind::Key {
                         generation: 10,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
@@ -85,9 +90,9 @@ fn create_game() -> Result<Game> {
         )?
         .object(
             (3, 11),
-            OwnedObject {
+            Owned {
                 object: Object {
-                    kind: ObjectKind::Key {
+                    kind: Kind::Key {
                         generation: 10,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
@@ -101,15 +106,18 @@ fn create_game() -> Result<Game> {
         .finish()
 }
 
-fn player_data() -> PlayerData {
-    PlayerData {
+fn player_data() -> player::Data {
+    use object::Kind;
+    use player::Placement;
+
+    player::Data {
         keys: 200,
         placements: vec![
             Placement {
                 cooldown: Cooldown::new(Duration::from_secs(1)),
                 cost: 20,
                 generate_object: Box::new(|| Object {
-                    kind: ObjectKind::Key {
+                    kind: Kind::Key {
                         generation: 10,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
@@ -121,7 +129,7 @@ fn player_data() -> PlayerData {
                 cooldown: Cooldown::new(Duration::from_secs(1)),
                 cost: 40,
                 generate_object: Box::new(|| Object {
-                    kind: ObjectKind::Fire {
+                    kind: Kind::Fire {
                         damage: 20,
                         cooldown: Cooldown::new(Duration::from_secs(1)),
                     },
@@ -133,7 +141,7 @@ fn player_data() -> PlayerData {
                 cooldown: Cooldown::new(Duration::from_secs(1)),
                 cost: 20,
                 generate_object: Box::new(|| Object {
-                    kind: ObjectKind::Barrier {},
+                    kind: Kind::Barrier {},
                     health: 3600,
                     max_health: 3600,
                 }),
@@ -142,8 +150,10 @@ fn player_data() -> PlayerData {
     }
 }
 
-fn create_game_controller(game: Game) -> Result<GameController> {
-    let game_controller_settings = GameControllerSettings {
+fn create_controller(game: Game) -> Result<Controller> {
+    use controller::KeyBinding;
+
+    let controller_settings = controller::Settings {
         key_binding: Players {
             left: KeyBinding {
                 up: Button::Keyboard(Key::W),
@@ -176,11 +186,11 @@ fn create_game_controller(game: Game) -> Result<GameController> {
         },
     };
 
-    GameController::new(game_controller_settings, game)
+    Controller::new(controller_settings, game)
 }
 
-fn create_game_view() -> Result<GameView> {
-    let game_view_settings = GameViewSettings {
+fn create_renderer() -> Result<Renderer> {
+    let renderer_settings = renderer::Settings {
         background_color: BLACK,
         game_area_percentage: 0.8,
         game_area_border: rectangle::Border {
@@ -209,5 +219,5 @@ fn create_game_view() -> Result<GameView> {
         health_bar_color: [0.8, 0.4, 0.4, 1.0],
     };
 
-    GameView::new(game_view_settings)
+    Renderer::new(renderer_settings)
 }

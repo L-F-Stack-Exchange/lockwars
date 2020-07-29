@@ -53,7 +53,7 @@ impl<T> std::ops::IndexMut<Player> for Players<T> {
 
 /// The player data.
 #[derive(Debug)]
-pub struct PlayerData {
+pub struct Data {
     /// The amount of keys the player owns.
     pub keys: u32,
     /// Placements.

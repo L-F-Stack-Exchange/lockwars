@@ -1,17 +1,17 @@
 //! Handles game rendering.
 
-use crate::{GameController, Object, ObjectKind, Player};
+use crate::{object, Controller, Object, Player};
 use anyhow::{anyhow, Context as AnyhowContext, Result};
 use graphics::{line, math::Vec2d, rectangle, types::Color, Context, Graphics};
 
-/// The game view.
-pub struct GameView {
-    settings: GameViewSettings,
+/// The game renderer.
+pub struct Renderer {
+    settings: Settings,
 }
 
-impl GameView {
-    /// Creates a new game view.
-    pub fn new(settings: GameViewSettings) -> Result<Self> {
+impl Renderer {
+    /// Creates a new game renderer.
+    pub fn new(settings: Settings) -> Result<Self> {
         check_percentage(settings.game_area_percentage).context("invalid game area percentage")?;
         check_percentage(settings.object_percentage).context("invalid object percentage")?;
 
@@ -19,12 +19,8 @@ impl GameView {
     }
 
     /// Draws the game on the screen.
-    pub fn draw<G>(
-        &self,
-        game_controller: &GameController,
-        context: &Context,
-        g: &mut G,
-    ) -> Result<()>
+    #[allow(clippy::too_many_lines)]
+    pub fn draw<G>(&self, game_controller: &Controller, context: &Context, g: &mut G) -> Result<()>
     where
         G: Graphics,
     {
@@ -250,6 +246,7 @@ impl GameView {
         G: Graphics,
     {
         use graphics::ellipse;
+        use object::Kind;
 
         // calculate layout
         let settings = &self.settings;
@@ -272,7 +269,7 @@ impl GameView {
 
         // draw object
         match object.kind {
-            ObjectKind::Key { .. } => {
+            Kind::Key { .. } => {
                 // draw regular triangle
                 let offset = (1.0 - f64::sqrt(3.0) / 2.0) / 2.0 * object_size;
                 let outline = [
@@ -287,7 +284,7 @@ impl GameView {
                 );
                 draw_polygon_border(line, &outline, context, g);
             }
-            ObjectKind::Fire { .. } => {
+            Kind::Fire { .. } => {
                 // draw circle
                 let circle = ellipse::Ellipse::new_border(
                     settings.object_outline_color,
@@ -295,7 +292,7 @@ impl GameView {
                 );
                 circle.draw(object_area, &context.draw_state, context.transform, g);
             }
-            ObjectKind::Barrier { .. } => {
+            Kind::Barrier { .. } => {
                 // draw square
                 let rectangle = rectangle::Rectangle::new_border(
                     settings.object_outline_color,
@@ -350,8 +347,8 @@ impl GameView {
 }
 
 #[derive(Clone)]
-/// The game view settings.
-pub struct GameViewSettings {
+/// The game renderer settings.
+pub struct Settings {
     /// The background color of the screen.
     pub background_color: Color,
 
