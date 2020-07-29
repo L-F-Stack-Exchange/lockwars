@@ -1,8 +1,14 @@
 [package]
-name = "lockwars"
-version = "0.1.0"
 authors = ["L. F. <l.f.stack.exchange@gmail.com>"]
+categories = ["games"]
+description = "A simple battle game"
 edition = "2018"
+keywords = ["game", "lockwars"]
+license = "MIT"
+name = "lockwars"
+readme = "README.md"
+repository = "https://github.com/L-F-Stack-Exchange/lockwars"
+version = "0.1.0"
 
 [dependencies]
 piston = "0.50.0"
