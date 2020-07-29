@@ -19,6 +19,7 @@ impl Renderer {
     }
 
     /// Draws the game on the screen.
+    #[allow(clippy::too_many_lines)]
     pub fn draw<G>(&self, game_controller: &Controller, context: &Context, g: &mut G) -> Result<()>
     where
         G: Graphics,
