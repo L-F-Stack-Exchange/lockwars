@@ -7,13 +7,13 @@ use std::borrow::Borrow;
 
 /// A game controller that handles input events.
 #[derive(Debug)]
-pub struct GameController {
+pub struct Controller {
     settings: Settings,
     game: Game,
     selected_cells: Players<(usize, usize)>,
 }
 
-impl GameController {
+impl Controller {
     /// Creates a new game controller.
     pub fn new(settings: Settings, game: Game) -> Result<Self> {
         let selected_cells = settings.selected_cells;

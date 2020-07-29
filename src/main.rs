@@ -8,8 +8,8 @@ use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
 use lockwars::{
-    game, game_controller, game_view, object, player, Cooldown, Game, GameController, GameView,
-    Object, Player, Players,
+    controller, game, game_view, object, player, Controller, Cooldown, Game, GameView, Object,
+    Player, Players,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{
@@ -27,7 +27,7 @@ fn main() -> Result<()> {
     let mut gl = GlGraphics::new(opengl);
 
     let game = create_game()?;
-    let mut game_controller = create_game_controller(game)?;
+    let mut controller = create_controller(game)?;
     let game_view = create_game_view()?;
 
     let event_settings = EventSettings::new();
@@ -35,15 +35,15 @@ fn main() -> Result<()> {
 
     while let Some(event) = events.next(&mut window) {
         if let Some(args) = event.button_args() {
-            game_controller.button_event(args)?;
+            controller.button_event(args)?;
         }
         if let Some(args) = event.render_args() {
             gl.draw(args.viewport(), |context, g| {
-                game_view.draw(&game_controller, &context, g)
+                game_view.draw(&controller, &context, g)
             })?;
         }
         if let Some(args) = event.update_args() {
-            game_controller.update_event(args)?;
+            controller.update_event(args)?;
         }
     }
 
@@ -150,10 +150,10 @@ fn player_data() -> player::Data {
     }
 }
 
-fn create_game_controller(game: Game) -> Result<GameController> {
-    use game_controller::KeyBinding;
+fn create_controller(game: Game) -> Result<Controller> {
+    use controller::KeyBinding;
 
-    let game_controller_settings = game_controller::Settings {
+    let controller_settings = controller::Settings {
         key_binding: Players {
             left: KeyBinding {
                 up: Button::Keyboard(Key::W),
@@ -186,7 +186,7 @@ fn create_game_controller(game: Game) -> Result<GameController> {
         },
     };
 
-    GameController::new(game_controller_settings, game)
+    Controller::new(controller_settings, game)
 }
 
 fn create_game_view() -> Result<GameView> {

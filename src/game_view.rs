@@ -1,6 +1,6 @@
 //! Handles game rendering.
 
-use crate::{object, GameController, Object, Player};
+use crate::{object, Controller, Object, Player};
 use anyhow::{anyhow, Context as AnyhowContext, Result};
 use graphics::{line, math::Vec2d, rectangle, types::Color, Context, Graphics};
 
@@ -19,12 +19,7 @@ impl GameView {
     }
 
     /// Draws the game on the screen.
-    pub fn draw<G>(
-        &self,
-        game_controller: &GameController,
-        context: &Context,
-        g: &mut G,
-    ) -> Result<()>
+    pub fn draw<G>(&self, game_controller: &Controller, context: &Context, g: &mut G) -> Result<()>
     where
         G: Graphics,
     {
