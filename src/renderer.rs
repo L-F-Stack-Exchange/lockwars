@@ -4,13 +4,13 @@ use crate::{object, Controller, Object, Player};
 use anyhow::{anyhow, Context as AnyhowContext, Result};
 use graphics::{line, math::Vec2d, rectangle, types::Color, Context, Graphics};
 
-/// The game view.
-pub struct GameView {
+/// The game renderer.
+pub struct Renderer {
     settings: Settings,
 }
 
-impl GameView {
-    /// Creates a new game view.
+impl Renderer {
+    /// Creates a new game renderer.
     pub fn new(settings: Settings) -> Result<Self> {
         check_percentage(settings.game_area_percentage).context("invalid game area percentage")?;
         check_percentage(settings.object_percentage).context("invalid object percentage")?;
@@ -346,7 +346,7 @@ impl GameView {
 }
 
 #[derive(Clone)]
-/// The game view settings.
+/// The game renderer settings.
 pub struct Settings {
     /// The background color of the screen.
     pub background_color: Color,

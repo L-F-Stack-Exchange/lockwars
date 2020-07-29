@@ -8,8 +8,8 @@ use graphics::color::{BLACK, WHITE};
 use graphics::line;
 use graphics::rectangle;
 use lockwars::{
-    controller, game, game_view, object, player, Controller, Cooldown, Game, GameView, Object,
-    Player, Players,
+    controller, game, object, player, renderer, Controller, Cooldown, Game, Object, Player,
+    Players, Renderer,
 };
 use opengl_graphics::{GlGraphics, OpenGL};
 use piston::{
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
 
     let game = create_game()?;
     let mut controller = create_controller(game)?;
-    let game_view = create_game_view()?;
+    let renderer = create_renderer()?;
 
     let event_settings = EventSettings::new();
     let mut events = Events::new(event_settings);
@@ -39,7 +39,7 @@ fn main() -> Result<()> {
         }
         if let Some(args) = event.render_args() {
             gl.draw(args.viewport(), |context, g| {
-                game_view.draw(&controller, &context, g)
+                renderer.draw(&controller, &context, g)
             })?;
         }
         if let Some(args) = event.update_args() {
@@ -189,8 +189,8 @@ fn create_controller(game: Game) -> Result<Controller> {
     Controller::new(controller_settings, game)
 }
 
-fn create_game_view() -> Result<GameView> {
-    let game_view_settings = game_view::Settings {
+fn create_renderer() -> Result<Renderer> {
+    let renderer_settings = renderer::Settings {
         background_color: BLACK,
         game_area_percentage: 0.8,
         game_area_border: rectangle::Border {
@@ -219,5 +219,5 @@ fn create_game_view() -> Result<GameView> {
         health_bar_color: [0.8, 0.4, 0.4, 1.0],
     };
 
-    GameView::new(game_view_settings)
+    Renderer::new(renderer_settings)
 }
